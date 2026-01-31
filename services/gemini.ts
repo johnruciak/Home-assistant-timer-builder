@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { DiscoveryResult } from "../types";
 
 const VISION_MODEL = 'gemini-3-pro-preview';
-const TEXT_MODEL = 'gemini-3-flash-preview';
+const TEXT_MODEL = 'gemini-3-pro-preview';
 
 const cleanJsonResponse = (text: string) => {
   return text.replace(/```json\n?|```/g, "").trim();
@@ -80,83 +80,35 @@ export const generateYaml = async (config: {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   
   const slug = config.deviceName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  const helperName = `${slug}_timer_duration`;
-  const helperEntity = `input_number.${helperName}`;
-  const timerName = `${slug}_countdown`;
-  const timerEntity = `timer.${timerName}`;
-  const scriptEntity = `script.${slug}_run_timer`;
   const domain = config.entityId.split('.')[0] || 'switch';
+  const turnOnService = `${domain}.turn_on`;
+  const turnOffService = `${domain}.turn_off`;
 
-  const prompt = `Generate Home Assistant YAML for "${config.deviceName}" (${config.entityId}).
+  const prompt = `Generate Home Assistant YAML components for a modular timer system.
 
-IMPORTANT: The user uses a MODULAR YAML structure.
-- For Automations and Scripts, DO NOT include the top-level keys. They go into !include_dir_list folders.
-- For Helpers (input_number and timer), they should be formatted as a "Package" (containing the domain keys) so they can be saved as a single standalone file in a "packages/" directory.
-- Use 2-space indentation.
+INPUT PARAMETERS (CRITICAL):
+- Target Device Name: "${config.deviceName}"
+- Target Entity ID: "${config.entityId}" (MUST USE THIS EXACT ID FOR ALL ACTIONS)
+- Target Domain: "${domain}"
+- Slug for Helpers: "${slug}"
+- Default Duration: ${config.duration} minutes
 
-YAML Content:
+RELIABILITY RULES:
+1. You MUST use "${config.entityId}" as the target for all turn_on and turn_off services.
+2. All helper entities MUST use the slug "${slug}" to ensure they link correctly.
+   - timer.${slug}_countdown
+   - input_number.${slug}_timer_duration
+   - script.${slug}_run_timer
+3. Use 2-space indentation and standard YAML with NEWLINES.
+4. "helpers" block MUST be in 'Package' format (including top-level domain keys like input_number: and timer:).
 
-1. "helpers" (Save as "packages/${slug}_timer_config.yaml"):
-# This is a standalone Package file. It includes the domain keys.
-input_number:
-  ${helperName}:
-    name: "${config.deviceName} Duration"
-    min: 1
-    max: 240
-    step: 1
-    initial: ${config.duration}
-    unit_of_measurement: "min"
-    mode: slider
-
-timer:
-  ${timerName}:
-    name: "${config.deviceName} Countdown"
-    icon: mdi:timer-outline
-
-2. "scripts" (Save as "scripts/timer_${slug}.yaml"):
-# No top-level "script:" key.
-${slug}_run_timer:
-  alias: "Start ${config.deviceName} Timer"
-  sequence:
-    - service: ${domain}.turn_on
-      target:
-        entity_id: ${config.entityId}
-    - service: timer.start
-      target:
-        entity_id: ${timerEntity}
-      data:
-        duration: "00:{{ states('${helperEntity}') | int(default=${config.duration}) }}:00"
-  mode: restart
-
-3. "automations" (Save as "automations/timer_${slug}_finished.yaml"):
-# No top-level "automation:" key.
-alias: "${config.deviceName} Timer Finished"
-description: "Automatically turn off the entity when timer ends"
-trigger:
-  - platform: event
-    event_type: timer.finished
-    event_data:
-      entity_id: ${timerEntity}
-action:
-  - service: ${domain}.turn_off
-    target:
-      entity_id: ${config.entityId}
-
-4. "dashboard" (Paste into Manual Card Editor):
-type: entities
-title: "${config.deviceName} Timer"
-entities:
-  - entity: ${config.entityId}
-    name: "Manual Toggle"
-  - entity: ${timerEntity}
-    name: "Remaining Time"
-  - entity: ${helperEntity}
-    name: "Timer Duration (min)"
-  - entity: ${scriptEntity}
-    name: "Trigger Countdown"
-    icon: mdi:play-circle-outline
-
-Return JSON with "scripts", "automations", "helpers", and "dashboard" keys.`;
+EXPECTED JSON STRUCTURE:
+{
+  "helpers": "input_number:\\n  ${slug}_timer_duration:\\n    name: ...\\n    ...\\ntimer:\\n  ${slug}_countdown:\\n    ...",
+  "scripts": "${slug}_run_timer:\\n  alias: Start ${config.deviceName} Timer\\n  sequence:\\n    - service: ${turnOnService}\\n      target:\\n        entity_id: ${config.entityId}\\n    ...",
+  "automations": "alias: ${config.deviceName} Timer Finished\\ntrigger:\\n  - platform: event\\n    event_type: timer.finished\\n    event_data:\\n      entity_id: timer.${slug}_countdown\\naction:\\n  - service: ${turnOffService}\\n    target:\\n      entity_id: ${config.entityId}",
+  "dashboard": "type: entities\\ntitle: ${config.deviceName} Timer\\nentities:\\n  - entity: ${config.entityId}\\n  - entity: timer.${slug}_countdown\\n  ..."
+}`;
 
   const response = await ai.models.generateContent({
     model: TEXT_MODEL,

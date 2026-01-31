@@ -9,12 +9,16 @@ const App: React.FC = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<DiscoveredEntity | null>(null);
+  const [customName, setCustomName] = useState('');
+  const [customEntityId, setCustomEntityId] = useState('');
   const [generating, setGenerating] = useState(false);
   const [yaml, setYaml] = useState<{ scripts: string; automations: string; helpers: string; dashboard: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [processingTime, setProcessingTime] = useState(0);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedFilenameIndex, setCopiedFilenameIndex] = useState<number | null>(null);
   
   const [duration, setDuration] = useState(30);
   const [includeSafety, setIncludeSafety] = useState(true);
@@ -78,12 +82,25 @@ const App: React.FC = () => {
     }
   }, [image]);
 
+  const handleSelectEntity = (entity: DiscoveredEntity) => {
+    setSelectedEntity(entity);
+    setCustomName(entity.name);
+    setCustomEntityId(entity.entityId);
+  };
+
   const triggerDiscovery = async (base64: string) => {
     setAnalyzing(true);
     setError(null);
     try {
       const result = await analyzeImage(base64);
       setDiscovery(result);
+      
+      if (result.entities && result.entities.length === 1) {
+        const entity = result.entities[0];
+        setSelectedEntity(entity);
+        setCustomName(entity.name);
+        setCustomEntityId(entity.entityId);
+      }
     } catch (err) {
       setError("AI was unable to map entities. Try a clearer screenshot.");
     } finally {
@@ -96,8 +113,8 @@ const App: React.FC = () => {
     setGenerating(true);
     try {
       const result = await generateYaml({
-        deviceName: selectedEntity.name,
-        entityId: selectedEntity.entityId,
+        deviceName: customName,
+        entityId: customEntityId,
         duration: duration,
         safety: includeSafety,
         helper: true
@@ -117,6 +134,36 @@ const App: React.FC = () => {
     setSelectedEntity(null);
     setYaml(null);
     setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const downloadFile = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyToClipboard = (content: string, index: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const copyFilename = (filename: string, index: number) => {
+    navigator.clipboard.writeText(filename);
+    setCopiedFilenameIndex(index);
+    setTimeout(() => setCopiedFilenameIndex(null), 2000);
+  };
+
+  const slug = customName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const filenames = {
+    helpers: `${slug}_timer_config-packages.yaml`,
+    scripts: `${slug}_timer-scripts.yaml`,
+    automations: `${slug}_timer-automations.yaml`
   };
 
   return (
@@ -158,7 +205,7 @@ const App: React.FC = () => {
                 Discover Entities.<br/>Modular <span className="text-indigo-500">YAML.</span>
               </h2>
               <p className="text-2xl text-slate-400 leading-relaxed font-medium max-w-2xl mx-auto">
-                Snap your dashboard. We identify every controllable item and generate clean, modular sliders. Each entity has it's own YAML files: see installation guide for more.
+                Snap your dashboard. We identify every controllable item and generate clean, modular sliders. You can use a full screenshot of your entire Home Assistant dashboard, or a cropped image just showing the switch you want to add a timer to. If a device is missing, ensure it is added to a card on your dashboard first. It's also helpful to make a note of your actual <b>Entity ID</b> (e.g., <code>switch.valve_1</code>) from Home Assistant to verify the AI's guess. Each entity has its own YAML files: see installation guide for more.
               </p>
             </header>
 
@@ -202,37 +249,87 @@ const App: React.FC = () => {
                 </div>
               ) : discovery && !yaml ? (
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-12 duration-700">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-800 pb-8">
-                    <div>
-                      <h3 className="text-6xl font-black text-white italic tracking-tighter leading-none">Choose Target</h3>
-                      <p className="text-slate-400 mt-4 text-xl font-medium">Which entity needs a modular timer?</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {discovery.entities.map((entity) => (
-                      <div 
-                        key={entity.entityId}
-                        onClick={() => setSelectedEntity(entity)}
-                        className={`group cursor-pointer p-8 rounded-[3rem] border-2 transition-all duration-300 relative overflow-hidden ${
-                          selectedEntity?.entityId === entity.entityId 
-                          ? 'border-indigo-600 bg-indigo-600/10 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.3)] ring-4 ring-indigo-500/20' 
-                          : 'border-slate-800 bg-slate-900 hover:border-slate-700'
-                        }`}
-                      >
-                        <h4 className="text-2xl font-black text-white italic leading-tight mb-2 tracking-tighter">{entity.name}</h4>
-                        <code className="text-[10px] font-mono text-slate-500 truncate block bg-black/30 p-2 rounded-lg">{entity.entityId}</code>
+                  {discovery.entities.length > 1 && (
+                    <>
+                      <div className="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-slate-800 pb-8">
+                        <div>
+                          <h3 className="text-6xl font-black text-white italic tracking-tighter leading-none">Choose Target</h3>
+                          <p className="text-slate-400 mt-4 text-xl font-medium">Which entity needs a modular timer?</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="grid grid-cols-1 md:flex-row gap-6">
+                        {discovery.entities.map((entity) => (
+                          <div 
+                            key={entity.entityId}
+                            onClick={() => handleSelectEntity(entity)}
+                            className={`group cursor-pointer p-8 rounded-[3rem] border-2 transition-all duration-300 relative overflow-hidden ${
+                              selectedEntity?.entityId === entity.entityId 
+                              ? 'border-indigo-600 bg-indigo-600/10 shadow-[0_20px_50px_-10px_rgba(79,70,229,0.3)] ring-4 ring-indigo-500/20' 
+                              : 'border-slate-800 bg-slate-900 hover:border-slate-700'
+                            }`}
+                          >
+                            <h4 className="text-2xl font-black text-white italic leading-tight mb-2 tracking-tighter">{entity.name}</h4>
+                            <code className="text-[10px] font-mono text-slate-500 truncate block bg-black/30 p-2 rounded-lg">{entity.entityId}</code>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {selectedEntity && (
-                    <div className="bg-slate-900 border-2 border-indigo-600/30 rounded-[4rem] p-16 shadow-2xl animate-in slide-in-from-bottom-12 duration-500">
-                      <div className="flex items-center gap-6 mb-16">
-                        <div className="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl italic">2</div>
-                        <h3 className="text-5xl font-black text-white italic tracking-tighter">Timer Settings</h3>
+                    <div className="bg-slate-900 border-2 border-indigo-600/30 rounded-[4rem] p-16 shadow-2xl animate-in slide-in-from-bottom-12 duration-500 space-y-12">
+                      <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center text-white font-black text-2xl italic">
+                          {discovery.entities.length > 1 ? '2' : '1'}
+                        </div>
+                        <h3 className="text-5xl font-black text-white italic tracking-tighter">Configure & Confirm</h3>
                       </div>
-                      <div className="p-12 bg-black/40 rounded-[4rem] shadow-inner text-center border border-white/5 mb-12">
+
+                      <div className="bg-amber-500/10 border-2 border-amber-500/30 p-8 rounded-[2rem] flex gap-6 items-center ring-4 ring-amber-500/5">
+                        <div className="w-12 h-12 bg-amber-500 rounded-2xl flex-shrink-0 flex items-center justify-center text-slate-900">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-amber-200 font-black uppercase tracking-widest text-xs mb-1 italic">Crucial Verification Step</p>
+                          <p className="text-amber-100/70 text-sm font-medium leading-relaxed">
+                            If the <b>Entity ID</b> below is wrong, the timer will fail in Home Assistant. Check your <b>Developer Tools > States</b> in HA to find your exact entity ID (e.g., <code>switch.backyard_valve</code>).
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-4">Display Name</label>
+                          <input 
+                            type="text" 
+                            value={customName}
+                            onChange={(e) => setCustomName(e.target.value)}
+                            className="w-full bg-slate-800/50 border-2 border-slate-700 rounded-3xl px-8 py-5 text-xl font-bold text-white focus:border-indigo-500 transition-colors outline-none"
+                            placeholder="Device Name"
+                          />
+                        </div>
+                        <div className="space-y-4">
+                          <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-4">Home Assistant Entity ID</label>
+                          <div className="relative group">
+                            <input 
+                              type="text" 
+                              value={customEntityId}
+                              onChange={(e) => setCustomEntityId(e.target.value)}
+                              className="w-full bg-slate-800/50 border-2 border-slate-700 rounded-3xl px-8 py-5 text-xl font-mono text-indigo-400 focus:border-indigo-500 transition-colors outline-none peer"
+                              placeholder="switch.example_entity"
+                            />
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 peer-focus:opacity-100 transition-opacity pointer-events-none">
+                              <span className="bg-indigo-600 text-[10px] font-black uppercase tracking-tighter text-white px-2 py-1 rounded">Editing Target ID</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-12 bg-black/40 rounded-[4rem] shadow-inner text-center border border-white/5">
+                        <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-8">Timer Duration (Minutes)</label>
                         <input 
                           type="range" min="1" max="240" value={duration} 
                           onChange={(e) => setDuration(parseInt(e.target.value))} 
@@ -243,6 +340,7 @@ const App: React.FC = () => {
                           <span className="text-3xl font-black text-slate-700 uppercase tracking-tighter">min</span>
                         </div>
                       </div>
+
                       <button 
                         onClick={handleGenerate} 
                         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-12 rounded-[4rem] shadow-2xl transition-all transform hover:scale-[1.02] active:scale-95 text-3xl uppercase tracking-widest italic"
@@ -273,22 +371,122 @@ scene: !include_dir_list scenes/`}
                   </div>
 
                   <div className="grid gap-10">
-                    <CodeBlock title="Block 1: Helpers (Package)" code={yaml.helpers} filename={`packages/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer_config.yaml`} />
-                    <CodeBlock title="Block 2: Script File" code={yaml.scripts} filename={`scripts/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer.yaml`} />
-                    <CodeBlock title="Block 3: Automation File" code={yaml.automations} filename={`automations/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer.yaml`} />
+                    <CodeBlock title="Block 1: Helpers (Package)" code={yaml.helpers} filename={filenames.helpers} />
+                    <CodeBlock title="Block 2: Script File" code={yaml.scripts} filename={filenames.scripts} />
+                    <CodeBlock title="Block 3: Automation File" code={yaml.automations} filename={filenames.automations} />
                     <CodeBlock title="Block 4: Manual Card" code={yaml.dashboard} filename="Manual Card Editor" />
                   </div>
                   
                   <div className="bg-white rounded-[4rem] p-16 text-slate-900 shadow-2xl">
-                    <h4 className="text-4xl font-black mb-8 italic">How to deploy these files:</h4>
-                    <ol className="space-y-6 text-slate-600 font-bold text-lg">
-                      <li>1. Open the <strong>File Editor</strong> add-on in Home Assistant.</li>
-                      <li>2. Ensure you have folders for <code>packages/</code>, <code>automations/</code>, <code>scripts/</code>, and <code>scenes/</code>.</li>
-                      <li>3. Save each snippet into its own file (use the suggested filenames above).</li>
-                      <li>4. Add the <strong>Step 0</strong> lines to your <code>configuration.yaml</code> to enable modular loading.</li>
-                      <li>5. <strong>Reload YAML</strong> from Developer Tools or Restart HA.</li>
-                      <li>6. Add the <strong>Manual Card</strong> to your dashboard.</li>
-                    </ol>
+                    <h4 className="text-4xl font-black mb-8 italic">Deployment Checklist:</h4>
+                    <ul className="space-y-8">
+                      <li className="flex gap-6">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-white font-black">1</div>
+                        <div className="space-y-4 flex-grow">
+                          <div>
+                            <p className="font-black text-xl italic uppercase tracking-tighter">Create configuration package</p>
+                            <p className="text-slate-500 font-medium">Create a new file in File Editor in folder <b>packages</b>:</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="group relative flex-grow">
+                              <code className="bg-slate-100 px-4 py-3 rounded-xl font-mono text-indigo-600 text-sm border border-slate-200 select-all block w-full pr-12 transition-all hover:border-indigo-300">
+                                {filenames.helpers}
+                              </code>
+                              <button 
+                                onClick={() => copyFilename(filenames.helpers, 1)} 
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="Copy Filename"
+                              >
+                                {copiedFilenameIndex === 1 ? (
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                                )}
+                              </button>
+                            </div>
+                            <button onClick={() => copyToClipboard(yaml.helpers, 1)} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors text-slate-600 font-bold text-xs uppercase tracking-widest min-w-[100px]">{copiedIndex === 1 ? 'Copied' : 'Copy Code'}</button>
+                            <button onClick={() => downloadFile(filenames.helpers, yaml.helpers)} className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors font-bold text-xs uppercase tracking-widest min-w-[100px]">Download</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="flex gap-6">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-white font-black">2</div>
+                        <div className="space-y-4 flex-grow">
+                          <div>
+                            <p className="font-black text-xl italic uppercase tracking-tighter">Create script file</p>
+                            <p className="text-slate-500 font-medium">Create a new file in File Editor in folder <b>scripts</b>:</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="group relative flex-grow">
+                              <code className="bg-slate-100 px-4 py-3 rounded-xl font-mono text-indigo-600 text-sm border border-slate-200 select-all block w-full pr-12 transition-all hover:border-indigo-300">
+                                {filenames.scripts}
+                              </code>
+                              <button 
+                                onClick={() => copyFilename(filenames.scripts, 2)} 
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="Copy Filename"
+                              >
+                                {copiedFilenameIndex === 2 ? (
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                                )}
+                              </button>
+                            </div>
+                            <button onClick={() => copyToClipboard(yaml.scripts, 2)} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors text-slate-600 font-bold text-xs uppercase tracking-widest min-w-[100px]">{copiedIndex === 2 ? 'Copied' : 'Copy Code'}</button>
+                            <button onClick={() => downloadFile(filenames.scripts, yaml.scripts)} className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors font-bold text-xs uppercase tracking-widest min-w-[100px]">Download</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="flex gap-6">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex-shrink-0 flex items-center justify-center text-white font-black">3</div>
+                        <div className="space-y-4 flex-grow">
+                          <div>
+                            <p className="font-black text-xl italic uppercase tracking-tighter">Create automation file</p>
+                            <p className="text-slate-500 font-medium">Create a new file in File Editor in folder <b>automations</b>:</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="group relative flex-grow">
+                              <code className="bg-slate-100 px-4 py-3 rounded-xl font-mono text-indigo-600 text-sm border border-slate-200 select-all block w-full pr-12 transition-all hover:border-indigo-300">
+                                {filenames.automations}
+                              </code>
+                              <button 
+                                onClick={() => copyFilename(filenames.automations, 3)} 
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="Copy Filename"
+                              >
+                                {copiedFilenameIndex === 3 ? (
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                                )}
+                              </button>
+                            </div>
+                            <button onClick={() => copyToClipboard(yaml.automations, 3)} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors text-slate-600 font-bold text-xs uppercase tracking-widest min-w-[100px]">{copiedIndex === 3 ? 'Copied' : 'Copy Code'}</button>
+                            <button onClick={() => downloadFile(filenames.automations, yaml.automations)} className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors font-bold text-xs uppercase tracking-widest min-w-[100px]">Download</button>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="flex gap-6 pt-6 border-t border-slate-100">
+                        <div className="w-12 h-12 bg-slate-200 rounded-2xl flex-shrink-0 flex items-center justify-center text-slate-600 font-black">4</div>
+                        <div className="space-y-2">
+                          <p className="font-black text-xl italic uppercase tracking-tighter">Final Step</p>
+                          <p className="text-slate-500 font-medium leading-relaxed">Paste the manual card YAML into your dashboard and <b>Reload YAML</b> in <b>Developer Tools > YAML</b> for each domain (scripts, automations, and packages).</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex justify-center pt-8">
+                    <button 
+                      onClick={resetApp}
+                      className="group flex items-center gap-4 px-12 py-8 bg-slate-900 border-2 border-slate-800 text-slate-400 font-black rounded-[3rem] hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-300 uppercase tracking-widest italic text-xl shadow-2xl"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Start New Scan
+                    </button>
                   </div>
                 </div>
               )}
