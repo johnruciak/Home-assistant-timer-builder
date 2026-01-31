@@ -263,14 +263,17 @@ const App: React.FC = () => {
                     <h4 className="text-xl font-black italic text-indigo-400">Step 0: Global Setup (One-time)</h4>
                     <p className="text-slate-400 font-medium">Add these lines to your <code>configuration.yaml</code> using the <strong>File Editor</strong>:</p>
                     <pre className="bg-black/40 p-6 rounded-2xl font-mono text-indigo-300 text-sm">
-{`automation: !include_dir_list automations/
+{`homeassistant:
+  packages: !include_dir_named packages/
+
+automation: !include_dir_list automations/
 script: !include_dir_list scripts/
 scene: !include_dir_list scenes/`}
                     </pre>
                   </div>
 
                   <div className="grid gap-10">
-                    <CodeBlock title="Block 1: Helpers (Configuration)" code={yaml.helpers} filename="configuration.yaml" />
+                    <CodeBlock title="Block 1: Helpers (Package)" code={yaml.helpers} filename={`packages/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer_config.yaml`} />
                     <CodeBlock title="Block 2: Script File" code={yaml.scripts} filename={`scripts/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer.yaml`} />
                     <CodeBlock title="Block 3: Automation File" code={yaml.automations} filename={`automations/${selectedEntity?.name.toLowerCase().replace(/\s/g, '_')}_timer.yaml`} />
                     <CodeBlock title="Block 4: Manual Card" code={yaml.dashboard} filename="Manual Card Editor" />
@@ -280,9 +283,9 @@ scene: !include_dir_list scenes/`}
                     <h4 className="text-4xl font-black mb-8 italic">How to deploy these files:</h4>
                     <ol className="space-y-6 text-slate-600 font-bold text-lg">
                       <li>1. Open the <strong>File Editor</strong> add-on in Home Assistant.</li>
-                      <li>2. Ensure you have the <code>automations/</code>, <code>scripts/</code>, and <code>scenes/</code> folders created in your config directory.</li>
-                      <li>3. Save the snippets as individual <code>.yaml</code> files in their respective folders.</li>
-                      <li>4. Add the 3 <code>!include_dir_list</code> lines (shown above) to your <code>configuration.yaml</code>.</li>
+                      <li>2. Ensure you have folders for <code>packages/</code>, <code>automations/</code>, <code>scripts/</code>, and <code>scenes/</code>.</li>
+                      <li>3. Save each snippet into its own file (use the suggested filenames above).</li>
+                      <li>4. Add the <strong>Step 0</strong> lines to your <code>configuration.yaml</code> to enable modular loading.</li>
                       <li>5. <strong>Reload YAML</strong> from Developer Tools or Restart HA.</li>
                       <li>6. Add the <strong>Manual Card</strong> to your dashboard.</li>
                     </ol>
@@ -305,22 +308,23 @@ scene: !include_dir_list scenes/`}
             </div>
             <div className="p-20 space-y-12">
               <div className="space-y-6">
-                <h4 className="text-3xl font-black text-white italic">Why use !include_dir_list?</h4>
+                <h4 className="text-3xl font-black text-white italic">Why modular?</h4>
                 <p className="text-slate-400 text-xl font-medium leading-relaxed">
-                  Modifying <code>configuration.yaml</code> every time is messy. By using <code>!include_dir_list</code>, you can simply drop a new <code>.yaml</code> file into a folder whenever you want to add a new timer automation. 
+                  Modifying <code>configuration.yaml</code> for every single timer is messy. By using <code>!include</code> directives, you create dedicated folders. To add a new timer, you just drop 3 files into their folders and you're done!
                 </p>
               </div>
 
               <div className="space-y-6 border-t border-slate-800 pt-10">
                 <h4 className="text-2xl font-black text-white italic">Prerequisites:</h4>
                 <ul className="list-disc list-inside text-slate-400 text-lg space-y-2">
-                  <li>Install the <strong>File Editor</strong> add-on from the Home Assistant Add-on Store.</li>
-                  <li>In your config directory, create folders named <code>automations</code>, <code>scripts</code>, and <code>scenes</code>.</li>
+                  <li>Install the <strong>File Editor</strong> add-on.</li>
+                  <li>In your config directory, create folders: <code>packages</code>, <code>automations</code>, <code>scripts</code>, and <code>scenes</code>.</li>
                 </ul>
               </div>
 
               <div className="bg-black/40 p-8 rounded-3xl border border-white/5">
                 <p className="text-indigo-400 font-black mb-4 uppercase tracking-widest text-xs">Required in configuration.yaml:</p>
+                <code className="text-indigo-300 block">homeassistant: &#123; packages: !include_dir_named packages/ &#125;</code>
                 <code className="text-indigo-300 block">automation: !include_dir_list automations/</code>
                 <code className="text-indigo-300 block">script: !include_dir_list scripts/</code>
                 <code className="text-indigo-300 block">scene: !include_dir_list scenes/</code>

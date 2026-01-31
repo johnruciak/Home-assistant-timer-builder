@@ -89,15 +89,15 @@ export const generateYaml = async (config: {
 
   const prompt = `Generate Home Assistant YAML for "${config.deviceName}" (${config.entityId}).
 
-IMPORTANT: The user uses a MODULAR YAML structure with !include_dir_list.
-- For Automations and Scripts, DO NOT include the top-level "automation:" or "script:" keys.
-- Each block will be saved into its own standalone .yaml file.
+IMPORTANT: The user uses a MODULAR YAML structure.
+- For Automations and Scripts, DO NOT include the top-level keys. They go into !include_dir_list folders.
+- For Helpers (input_number and timer), they should be formatted as a "Package" (containing the domain keys) so they can be saved as a single standalone file in a "packages/" directory.
 - Use 2-space indentation.
 
 YAML Content:
 
-1. "helpers" (Save as "packages/${slug}_timer.yaml" or add to configuration.yaml):
-# We define the helper and the timer here
+1. "helpers" (Save as "packages/${slug}_timer_config.yaml"):
+# This is a standalone Package file. It includes the domain keys.
 input_number:
   ${helperName}:
     name: "${config.deviceName} Duration"
@@ -114,7 +114,7 @@ timer:
     icon: mdi:timer-outline
 
 2. "scripts" (Save as "scripts/timer_${slug}.yaml"):
-# No top-level "script:" key. Just the script definition.
+# No top-level "script:" key.
 ${slug}_run_timer:
   alias: "Start ${config.deviceName} Timer"
   sequence:
@@ -129,7 +129,7 @@ ${slug}_run_timer:
   mode: restart
 
 3. "automations" (Save as "automations/timer_${slug}_finished.yaml"):
-# No top-level "automation:" key. Just the list item dictionary.
+# No top-level "automation:" key.
 alias: "${config.deviceName} Timer Finished"
 description: "Automatically turn off the entity when timer ends"
 trigger:
