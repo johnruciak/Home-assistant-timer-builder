@@ -4,6 +4,7 @@ import { DiscoveryResult, DiscoveredEntity } from './types';
 import { CodeBlock } from './components/CodeBlock';
 
 const App: React.FC = () => {
+  const [isKeyConfigured, setIsKeyConfigured] = useState<boolean | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [analysing, setAnalyzing] = useState(false);
   const [discovery, setDiscovery] = useState<DiscoveryResult | null>(null);
@@ -29,6 +30,30 @@ const App: React.FC = () => {
 
   const [manualInput, setManualInput] = useState('');
   const [showManualInputForm, setShowManualInputForm] = useState(false);
+
+  useEffect(() => {
+    const checkKey = async () => {
+      // @ts-ignore
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      setIsKeyConfigured(hasKey);
+    };
+    checkKey();
+  }, []);
+
+  const handleActivate = async () => {
+    // @ts-ignore
+    await window.aistudio.openSelectKey();
+    setIsKeyConfigured(true);
+  };
+
+  const handleError = (err: any) => {
+    if (err?.message?.includes('Requested entity was not found')) {
+      setIsKeyConfigured(false);
+      setError("API Key verification failed. Please select a valid key from a paid project.");
+    } else {
+      setError(err?.message || "An unexpected system error occurred.");
+    }
+  };
 
   const EXPORTER_CARD_REPO = "https://github.com/scharc/ha-entity-exporter-card";
   const EXPORTER_CARD_YAML = `type: custom:entity-exporter-card
@@ -209,7 +234,7 @@ scene: !include_dir_list scenes/`;
         handleSelectEntity(result.entities[0]);
       }
     } catch (err) {
-      setError("AI discovery failed. Please ensure the screenshot is clear.");
+      handleError(err);
     } finally {
       setAnalyzing(false);
     }
@@ -281,7 +306,7 @@ scene: !include_dir_list scenes/`;
       setYaml(result);
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (err) {
-      setError("YAML generation failed.");
+      handleError(err);
     } finally {
       setGenerating(false);
     }
@@ -346,6 +371,50 @@ scene: !include_dir_list scenes/`;
     }
   };
 
+  if (isKeyConfigured === false) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-8 selection:bg-indigo-500/30">
+        <div className="max-w-2xl w-full bg-slate-900 border-2 border-indigo-600/30 rounded-[4rem] p-16 text-center space-y-10 shadow-3xl animate-in zoom-in-95 duration-500">
+          <div className="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-indigo-500/20">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-tight">System Activation</h2>
+            <p className="text-slate-400 text-xl font-medium italic leading-relaxed">
+              This is a <span className="text-indigo-400">Bring Your Own Key</span> application. 
+              We don't store your secrets. To use the AI Discovery engine, connect your Google Gemini API Key.
+            </p>
+          </div>
+          <div className="p-8 bg-black/40 rounded-3xl text-left border border-white/5 space-y-4">
+            <h4 className="text-indigo-400 font-black text-xs uppercase tracking-widest italic">How it works:</h4>
+            <ul className="text-slate-400 text-sm space-y-3 font-medium">
+              <li className="flex gap-3"><span className="text-indigo-500 font-bold">1.</span> Key stays in your browser (LocalStorage).</li>
+              <li className="flex gap-3"><span className="text-indigo-500 font-bold">2.</span> Works with Free or Paid Google Cloud projects.</li>
+              <li className="flex gap-3"><span className="text-indigo-500 font-bold">3.</span> Vision models require billing enabled on Google Cloud.</li>
+            </ul>
+          </div>
+          <button 
+            onClick={handleActivate} 
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-8 rounded-3xl text-xl uppercase tracking-widest transition-all shadow-2xl shadow-indigo-600/20 active:scale-95 italic border border-white/10"
+          >
+            ACTIVATE SYSTEM
+          </button>
+          <p className="text-slate-500 text-xs">
+            Visit <a href="https://aistudio.google.com/" target="_blank" className="text-indigo-400 underline hover:text-indigo-300">Google AI Studio</a> to generate a key.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isKeyConfigured === null) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-indigo-600 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#020617] font-sans text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden" onDragOver={() => setIsDragging(true)} onDragLeave={(e) => e.relatedTarget === null && setIsDragging(false)} onDrop={onDrop}>
       {isDragging && !showListManager && (
@@ -395,7 +464,10 @@ scene: !include_dir_list scenes/`;
               <h2 className="text-8xl font-black text-white tracking-tighter leading-[0.85] italic animate-in fade-in slide-in-from-top-4">
                 Discover Entities.<br/>Modular <span className="text-indigo-500">YAML.</span>
               </h2>
-              <p className="text-2xl text-slate-400 leading-relaxed font-medium">Simple visual grouping for valves, climate, and more. Non-logical entities are hidden.</p>
+              <p className="text-2xl text-slate-400 leading-relaxed font-medium">
+                The high-performance architect for Home Assistant timers. 
+                Upload a screenshot or sync your entity list to generate production-grade modular packages.
+              </p>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-stretch">
@@ -405,20 +477,20 @@ scene: !include_dir_list scenes/`;
                     <div className="w-24 h-24 bg-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-700 shadow-xl group-hover:shadow-indigo-500/20 cursor-pointer">
                       <svg className="w-10 h-10 text-indigo-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </div>
-                    <p className="text-white font-black text-3xl uppercase tracking-tighter italic cursor-pointer">Direct ID Entry</p>
-                    <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest cursor-pointer">Manual domain.entity_id</p>
+                    <p className="text-white font-black text-3xl uppercase tracking-tighter italic cursor-pointer">Quick Entry</p>
+                    <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest cursor-pointer">Fast-track by ID</p>
                   </div>
                 ) : (
                   <form onSubmit={handleManualEntrySubmit} className="w-full space-y-8 animate-in zoom-in-95 duration-300">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-indigo-400 font-black italic uppercase text-sm tracking-widest">Manual Setup</h4>
+                      <h4 className="text-indigo-400 font-black italic uppercase text-sm tracking-widest">Single Entity</h4>
                       <button type="button" onClick={() => setShowManualInputForm(false)} className="text-slate-500 hover:text-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg></button>
                     </div>
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Entity ID</label>
-                      <input autoFocus type="text" placeholder="e.g. climate.living_room" value={manualInput} onChange={(e) => setManualInput(e.target.value)} className="w-full bg-slate-800/80 border-2 border-slate-700 rounded-3xl px-6 py-5 text-base font-mono text-white outline-none focus:border-indigo-500 transition-colors shadow-inner" />
+                      <input autoFocus type="text" placeholder="e.g. valve.garden_tap" value={manualInput} onChange={(e) => setManualInput(e.target.value)} className="w-full bg-slate-800/80 border-2 border-slate-700 rounded-3xl px-6 py-5 text-base font-mono text-white outline-none focus:border-indigo-500 transition-colors shadow-inner" />
                     </div>
-                    <button type="submit" disabled={!manualInput.includes('.')} className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black rounded-3xl text-sm uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-xl shadow-indigo-600/20 italic">INITIALIZE</button>
+                    <button type="submit" disabled={!manualInput.includes('.')} className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black rounded-3xl text-sm uppercase tracking-[0.3em] transition-all transform active:scale-95 shadow-xl shadow-indigo-600/20 italic">CONFIGURE</button>
                   </form>
                 )}
               </div>
@@ -428,11 +500,11 @@ scene: !include_dir_list scenes/`;
                   <div className="bg-slate-900/60 rounded-[4rem] border-2 border-slate-800 p-8 flex flex-col h-[600px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 relative">
                     <div className="flex flex-col gap-6 mb-8">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-3xl font-black italic tracking-tighter text-white uppercase">Your Entities</h3>
+                        <h3 className="text-3xl font-black italic tracking-tighter text-white uppercase">Sync Library</h3>
                         <button onClick={() => setShowListManager(true)} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-slate-400 hover:text-indigo-400 transition-all shadow-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
                       </div>
                       <div className="relative">
-                        <input type="text" placeholder="Search controllable targets..." value={quickSearch} onChange={(e) => setQuickSearch(e.target.value)} className="w-full bg-slate-800/80 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-bold text-white outline-none focus:border-indigo-500 transition-colors shadow-inner" />
+                        <input type="text" placeholder="Filter synced devices..." value={quickSearch} onChange={(e) => setQuickSearch(e.target.value)} className="w-full bg-slate-800/80 border-2 border-slate-700 rounded-2xl px-6 py-4 text-sm font-bold text-white outline-none focus:border-indigo-500 transition-colors shadow-inner" />
                         <svg className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                       </div>
                     </div>
@@ -460,8 +532,8 @@ scene: !include_dir_list scenes/`;
                 ) : (
                   <div onClick={() => setShowListManager(true)} className="group relative bg-slate-900 border-4 border-slate-800 rounded-[4rem] p-10 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all duration-700 shadow-2xl shadow-black h-full text-center">
                     <div className="w-24 h-24 bg-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-700 shadow-xl group-hover:shadow-indigo-500/20"><svg className="w-12 h-12 text-indigo-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg></div>
-                    <p className="text-white font-black text-3xl uppercase tracking-tighter italic">Entity List</p>
-                    <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest">Actuatable Devices Only</p>
+                    <p className="text-white font-black text-3xl uppercase tracking-tighter italic">Entity Sync</p>
+                    <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest">Connect Device List</p>
                   </div>
                 )}
               </div>
@@ -470,7 +542,7 @@ scene: !include_dir_list scenes/`;
                 <input type="file" ref={fileInputRef} onChange={(e) => e.target.files && handleFile(e.target.files[0])} className="hidden" accept="image/*" />
                 <div className="w-24 h-24 bg-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-700 shadow-xl group-hover:shadow-indigo-500/20"><svg className="w-12 h-12 text-indigo-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></div>
                 <p className="text-white font-black text-3xl uppercase tracking-tighter italic">Drop Screen</p>
-                <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest">AI Vision Mapper</p>
+                <p className="text-slate-500 text-xs mt-4 font-bold uppercase tracking-widest">Visual Target Mapping</p>
               </div>
             </div>
           </div>

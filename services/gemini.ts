@@ -9,6 +9,7 @@ const cleanJsonResponse = (text: string) => {
 };
 
 export const analyzeImage = async (base64Image: string): Promise<DiscoveryResult> => {
+  // Initialize right before use to pick up injected process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
@@ -78,13 +79,13 @@ export const generateYaml = async (config: {
   helpers: string,
   dashboard: string
 }> => {
+  // Initialize right before use to pick up injected process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const technicalIdOnly = config.entityId.includes('.') ? config.entityId.split('.')[1] : config.entityId;
   const slug = technicalIdOnly.toLowerCase().replace(/[^a-z0-9]/g, '_');
   const domain = config.entityId.split('.')[0] || 'switch';
 
-  // Smart awareness: If user names it a valve or it has swv (sonoff water valve) keywords, use valve iconography but switch services.
   const isValveLikely = config.deviceName.toLowerCase().includes('valve') || config.entityId.toLowerCase().includes('valve') || config.entityId.toLowerCase().includes('swv');
 
   const prompt = `Generate Home Assistant YAML components for a modular timer system.
