@@ -7,14 +7,14 @@ EntityTimer Pro is a client-side tool that generates modular YAML packages for H
 Home Assistant does not support modular files by default. You must enable "Packages" and "Dir Lists" before you can use the code from this app.
 
 ### Step A: Install the File Editor
-Go to **Settings > Add-ons** and install the **File Editor** add-on. Ensure it is started and "Show in sidebar" is checked.
+Go to **Settings > Add-ons** and install the **File Editor** add-on. Ensure it is started and "Show in sidebar" is checked. You **must** have a file editor running to perform the next steps.
 
 ### Step B: Create Required Folders
-Using the File Editor, navigate to your `/config/` directory. You **MUST** create these three folders exactly as named. **Home Assistant will crash if you try to proceed to Step C before these folders exist.**
+Using your file editor, navigate to your /config/ folder and create these three folders. Home Assistant will crash if you try to include them in Step C before they actually exist.
 
-1. `packages/`
-2. `automations/`
-3. `scripts/`
+*   `packages/`
+*   `automations/`
+*   `scripts/`
 
 ### Step C: Update configuration.yaml
 Open your `configuration.yaml` in the File Editor and add these lines at the top level:
@@ -25,11 +25,12 @@ homeassistant:
 
 automation: !include_dir_list automations/
 script: !include_dir_list scripts/
+scene: !include_dir_list scenes/
 ```
 
 ## 3. How the Generated Code Works
 The app generates a "Modular Package." Unlike standard automations, these are self-contained:
-*   **Input Number**: Creates a slider on your dashboard to adjust the time (e.g., 10 mins vs 60 mins).
+*   **Input Number**: Creates a slider on your dashboard to adjust the time.
 *   **Timer**: A backend entity that handles the actual countdown.
 *   **Script**: The logic that turns the device ON and starts the countdown simultaneously.
 *   **Automation**: The safety "watchdog" that triggers when the timer hits zero to turn the device OFF.
