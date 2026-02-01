@@ -41,11 +41,49 @@ This app requires a valid Google Gemini API Key with access to Vision models.
 ### Timer Logic Options
 *   **Safety Timers**: (Optional) Logic that ensures devices turn off even if the Home Assistant core restarts during a countdown.
 *   **Climate Strategy**: For `climate` entities, the app generates specific sequences to set `hvac_mode` and `temperature` before initiating the timer.
-*   **Valve-Awareness**: Smart detection for Sonoff or Zigbee water valves, applying specific iconography (`mdi:water-pump`) and safety checks.
 
-## 🚀 Deployment Workflow
-1.  **Scan/Select** your target entity.
-2.  **Configure** your desired default duration.
-3.  **Construct** the system to generate the 4 modular blocks.
-4.  **Download/Copy** each file into its respective Home Assistant folder (`packages/`, `scripts/`, `automations/`).
-5.  **Reload** Home Assistant YAML configuration.
+## 🛠️ Self-Hosting Instructions
+
+EntityTimer Pro is a static React application. You can host it yourself easily:
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/your-username/ha-entity-timer-pro.git
+    cd ha-entity-timer-pro
+    ```
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Environment Setup**:
+    Create a `.env` file or set the environment variable:
+    ```bash
+    API_KEY=your_google_gemini_api_key_here
+    ```
+4.  **Launch**:
+    ```bash
+    npm run dev
+    ```
+
+## 🍴 Forks & Community Contributions
+
+We highly encourage forking this project! 
+
+**Specific Challenge to the Community:**
+We would love to see forks that **remove the dependency on the Google Gemini API**. If you have expertise in local LLMs (like Ollama) or advanced pattern matching/OCR that can run entirely client-side or on a local server, please fork and share your version. The goal is 100% privacy and offline functionality.
+
+## 📄 License
+
+This project is licensed under the **MIT License**. 
+
+This is one of the most unrestrictive licenses available. You are free to:
+*   **Use** the software for any purpose.
+*   **Modify** the code to suit your needs.
+*   **Distribute** your modifications.
+*   **Sublicense** the software.
+
+*The only requirement is that the original copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.*
+
+---
+
+**EntityTimer Pro** is a community tool. Built by HA users, for HA users.
