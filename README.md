@@ -14,35 +14,43 @@ Read the **[Technical Documentation & Setup Guide](DOCUMENTATION.md)** first. It
 ### 1. Quick Entry
 Use this if you already know the technical ID of your device (e.g., from the States dev tool).
 
-![Quick Entry UI](quick_entry.png)
-*Caption: Simple, focused entry for known Entity IDs.*
+> **🖥️ Visual Guide: Quick Entry**
+> *The "Quick Entry" interface is a focused modal where you can directly paste an entity ID like `valve.garden_tap` or `switch.pool_pump` to begin configuration immediately.*
 
-*   **Setup**: Paste that ID into the **Quick Entry** box on the home screen and hit Configure.
+*   **Setup**: Paste your Entity ID into the **Quick Entry** box on the home screen and hit **Configure**.
 
 ### 2. Entity Sync (Recommended)
 Sync your device list so you can pick from a menu instead of typing IDs.
-*   **Via HACS (Best)**: Install the [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via **HACS**. 
-*   **How to Sync**: Open the Entity Exporter card in your dashboard, select your domains (Valves, Lights, etc.), and copy the generated JSON.
 
-![Entity Exporter UI](exporter_card.png)
-*Caption: Use the Entity Exporter card in HA to quickly grab your device list.*
+*   **Step A: Install Exporter**: Use [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via **HACS**. 
+*   **Step B: Generate JSON**: Add the card to your dashboard, select your domains (Valves, Lights, etc.), and copy the generated JSON.
 
-*   **Importing**: Paste that JSON into the **Entity Sync Center** in this app.
+> **📊 Visual Guide: Sync Center**
+> *The Sync Center organizes your Home Assistant devices into categories (Valves, Climate, Lights, etc.) allowing you to click any device to instantly load its timer configuration.*
 
-![Sync Center UI](sync_center.png)
-*Caption: The Sync Center processes your JSON and organizes devices into controllable categories.*
+*   **Step C: Import**: Paste that JSON into the **Entity Sync Center** in this app to populate your local library.
 
 ### 3. Drop Screen (Experimental)
-*   **How it works**: Take a screenshot of your Home Assistant dashboard and drop it onto this page. Our AI (Gemini 3 Pro) will attempt to identify your buttons and map them to technical IDs.
+*   **How it works**: Take a screenshot of your Home Assistant dashboard and drop it onto the app.
+*   **AI Vision**: Our AI (Gemini 3 Pro) scans the image, identifies buttons/toggles, and attempts to map them to technical IDs automatically.
+
+---
 
 ## 🚀 Activation & Privacy
 This is a **Bring Your Own Key** application.
-1.  Get a free API key from [Google AI Studio](https://aistudio.google.com/).
-2.  Click **Activate** in the app. 
-3.  **Privacy**: Your data stays in your browser. It is sent directly to Google's AI servers and is never stored by this application.
+1.  **Get a Key**: Obtain a free API key from [Google AI Studio](https://aistudio.google.com/).
+2.  **Activate**: Click the **Activate** button in the app to connect the AI engine.
+3.  **Privacy**: Your data stays in your browser. Images and IDs are sent directly to Google's AI servers via encrypted SSL and are never stored or seen by this application's creators.
 
-## 📁 Repository
-Check out the source code and contribute here: [GitHub Repository](https://github.com/your-username/ha-entity-timer-pro)
+## 📁 Repository & Contributing
+Found a bug or want to add a feature? 
+Check out the source: [GitHub Repository](https://github.com/your-username/ha-entity-timer-pro)
 
 ---
 **Build your smarter home today, one timer at a time.**
+
+<!-- 
+NOTE TO MAINTAINER: 
+To restore screenshots, upload files named 'quick_entry.png', 'exporter_card.png', 
+and 'sync_center.png' to the root directory and update the markdown tags. 
+-->
