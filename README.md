@@ -1,27 +1,44 @@
 # ⏱️ EntityTimer Pro
-### The Easiest Way to Add "Auto-Off" Timers to Your Smart Home
+### Add "Auto-Off" timers to Home Assistant devices without writing code.
 
-Are you new to **Home Assistant** and struggling with complex YAML code? **EntityTimer Pro** is here to help you automate your home without the headache.
+EntityTimer Pro generates the YAML configuration needed to add countdown timers to your Home Assistant switches, valves, lights, and climate units. It is designed for new users who want modular, safe automations without learning complex syntax.
 
-## What is this?
-Ever turned on a garden valve and forgot to turn it off? Or left the AC running all night? 
-EntityTimer Pro uses AI to build a "Smart Timer" system for any device in your home. It writes the code for you, so you don't have to.
+## 🛠️ How to Use
 
-## How it works (for beginners)
-1.  **Take a Screenshot**: Open your Home Assistant app and take a screenshot of your dashboard.
-2.  **Upload**: Drop that screenshot into this app. Our AI will automatically "see" your devices (like valves, lights, or AC units).
-3.  **Configure**: Choose how many minutes you want the timer to last.
-4.  **Copy & Paste**: The app gives you specific blocks of code and tells you exactly where to put them in your Home Assistant files.
+### 1. Quick Entry (Fastest)
+Use this if you already know the technical ID of your device.
+*   **Where to find the ID**: In Home Assistant, go to **Developer Tools > States**. Look for the `entity_id` column (e.g., `switch.living_room_fan` or `valve.garden_tap`).
+*   **How to setup**: Paste the ID into the "Quick Entry" field in this app and set your desired duration.
 
-## 🌟 Why use this?
-*   **Safety First**: Great for water valves or heaters to ensure they never stay on forever.
-*   **No Coding Needed**: You don't need to learn how to write complex automations; the AI handles the logic.
-*   **Privacy Protected**: We use a "Bring Your Own Key" system. Your smart home data never touches our servers—it goes straight from your browser to Google's secure AI.
+### 2. Entity Sync (Bulk Selection)
+Use this to import your device list so you can set up multiple timers quickly.
+*   **How to get the list**: 
+    1.  Go to **Developer Tools > States** in Home Assistant.
+    2.  Highlight and copy the text in the states table.
+    3.  Click **Entity Sync** in this app and paste the text into the "Manual" tab.
+*   **Alternative**: Use a custom JSON exporter card (link provided in the app) for a cleaner sync.
 
-## 🚀 Getting Started
-1.  **Get your AI Key**: Go to [Google AI Studio](https://aistudio.google.com/) and click "Get API Key". It's free to start!
-2.  **Activate**: Click the **Activate** button in this app and paste your key.
-3.  **Setup HA**: Make sure your Home Assistant is ready for "Packages" (see our [Installation Guide](DOCUMENTATION.md) for a simple 1-minute setup).
+### 3. Drop Screen (Experimental)
+This uses AI Vision to "read" your dashboard.
+*   **How it works**: Take a screenshot of your Home Assistant dashboard and drop it into the app.
+*   **Note**: This is an **experimental feature**. It works best with high-resolution screenshots. It requires your Google Gemini API key to be linked to a project with billing enabled (even if usage stays within the free tier).
+
+## 🚀 Activation
+This application uses a **Bring Your Own Key** model. Your home data never leaves your browser except to talk directly to Google's AI service.
+1.  Generate a key at [Google AI Studio](https://aistudio.google.com/).
+2.  Click **Activate** in the app and paste your key.
+3.  The key is stored safely in your browser's local storage.
+
+## 📦 Installation in Home Assistant
+The app provides "Modular Packages." Before using the generated code, ensure your `configuration.yaml` is set up to read from folders:
+```yaml
+homeassistant:
+  packages: !include_dir_named packages/
+
+automation: !include_dir_list automations/
+script: !include_dir_list scripts/
+```
+Detailed steps are available in the [Technical Documentation](DOCUMENTATION.md).
 
 ---
 **Build your smarter home today, one timer at a time.**
