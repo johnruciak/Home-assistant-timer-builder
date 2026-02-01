@@ -4,13 +4,10 @@
 **🛑 STOP! DO NOT SKIP THIS.** 
 Before using this tool, you **must** prepare your Home Assistant configuration. This app uses a **Modular Package Architecture** which is significantly safer and cleaner than standard configurations, but it requires a one-time setup.
 
-## 🛡️ Why use this approach?
-*   **Watchdog Security**: Uses the `timer` integration instead of fragile `delay` commands, ensuring devices turn off even if Home Assistant restarts.
-*   **Atomic Logic**: Every device gets its own file. Delete the file to remove the timer. No messy `automations.yaml`.
-*   **Zero Collisions**: Unique namespacing prevents logic from cross-firing between different devices.
-
 ## ⚠️ Mandatory Prerequisite
-Read the **[Technical Documentation & Setup Guide](DOCUMENTATION.md)** first. It explains how to set up the 3 required folders and update your `configuration.yaml` with the necessary include directives.
+Read the **[Technical Documentation & Setup Guide](DOCUMENTATION.md)** first. It explains how to set up the 3 required folders and update your `configuration.yaml` with the necessary include directives. 
+
+**Why use this approach?** We use a "Watchdog" architecture to ensure devices like water valves always turn off, even if Home Assistant restarts. See the docs for the full safety breakdown.
 
 ---
 
@@ -49,7 +46,7 @@ This is a **Bring Your Own Key** application.
 
 ## 📁 Repository & Contributing
 Found a bug or want to add a feature? 
-Check out the source: [GitHub Repository](https://github.com/your-username/ha-entity-timer-pro)
+Check out the source: [GitHub Repository](https://github.com/johnruciak/Home-assistant-timer-builder)
 
 ---
 **Build your smarter home today, one timer at a time.**

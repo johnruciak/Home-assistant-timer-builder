@@ -30,19 +30,22 @@ scene: !include_dir_list scenes/
 
 ## 3. The Architecture of Reliability: Why Modular?
 
-Most Home Assistant users start by putting everything in one big `automations.yaml` file. While simple, this becomes a "spaghetti" mess that is hard to debug. EntityTimer Pro uses a **Modular Package** approach for three critical reasons:
+Most Home Assistant users start by putting everything in one big `automations.yaml` file. While simple, this becomes a "spaghetti" mess that is hard to debug. EntityTimer Pro uses a **Modular Package** approach built on three core pillars:
 
-### A. The "Watchdog" Safety Mechanism
-Standard scripts often use a `delay` command. **Delays are dangerous.** If Home Assistant restarts or a script is reloaded while a delay is running, the script dies and the device (like a water valve) stays ON forever.
-*   **Our Solution**: We use the dedicated `timer` integration. Timers are tracked by the Home Assistant state engine. The generated automation acts as a "Watchdog"—it listens for the timer to finish and fires a dedicated OFF command, ensuring your garden doesn't flood even if the UI is closed.
+### A. Watchdog Security
+**Uses the timer integration instead of fragile delay commands, ensuring devices turn off even if Home Assistant restarts.**
+*   **The Problem**: Standard scripts often use a `delay` command. If Home Assistant restarts or a script is reloaded while a delay is running, the script dies and the device (like a water valve) stays ON forever.
+*   **Our Solution**: We use the dedicated `timer` integration. Timers are tracked by the Home Assistant state engine. The generated automation acts as a "Watchdog"—it listens for the timer to finish and fires a dedicated OFF command, ensuring your garden doesn't flood even if the UI is closed or the system reboots.
 
-### B. Atomic Deletion & Portability
-Because every device gets its own package file (e.g., `garden_valve_timer.yaml`), the logic is self-contained. 
-*   **Better**: If you replace your smart plug, you just delete the one file. You don't have to hunt through 5,000 lines of code to find the 4 related automations.
-*   **Safer**: Editing a single small file prevents accidental typos that could break your entire Home Assistant configuration.
+### B. Atomic Logic
+**Every device gets its own file. Delete the file to remove the timer. No messy `automations.yaml`.**
+*   Because every device gets its own package file (e.g., `garden_valve_timer.yaml`), the logic is self-contained. 
+*   **Maintenance**: If you replace your smart plug, you just delete the one file. You don't have to hunt through 5,000 lines of code to find the related automations.
+*   **Safety**: Editing a single small file prevents accidental typos that could break your entire Home Assistant configuration.
 
-### C. Collision Avoidance
-Each generated file uses a unique "Slug" (based on your entity ID). This ensures that a timer for your "Living Room AC" never accidentally triggers the automation for your "Kitchen Light," even if they use similar logic.
+### C. Zero Collisions
+**Unique namespacing prevents logic from cross-firing between different devices.**
+*   Each generated file uses a unique "Slug" (based on your entity ID). This ensures that a timer for your "Living Room AC" never accidentally triggers the automation for your "Kitchen Light," even if they use similar logic patterns.
 
 ## 4. How the Generated Code Works
 The app generates a "Modular Package." Unlike standard automations, these are self-contained:
