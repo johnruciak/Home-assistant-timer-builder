@@ -1,8 +1,7 @@
-
 export interface DiscoveredEntity {
   entityId: string;
   name: string;
-  type: 'switch' | 'light' | 'valve' | 'fan' | 'other';
+  type: 'switch' | 'light' | 'valve' | 'fan' | 'climate' | 'vacuum' | 'media_player' | 'cover' | 'other';
   icon?: string;
 }
 
