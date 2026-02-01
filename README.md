@@ -2,7 +2,12 @@
 ### Automated "Auto-Off" timers for Home Assistant devices.
 
 **🛑 STOP! DO NOT SKIP THIS.** 
-Before using this tool, you **must** prepare your Home Assistant configuration. Failure to do so will result in errors or a system crash when you try to use the generated code.
+Before using this tool, you **must** prepare your Home Assistant configuration. This app uses a **Modular Package Architecture** which is significantly safer and cleaner than standard configurations, but it requires a one-time setup.
+
+## 🛡️ Why use this approach?
+*   **Watchdog Security**: Uses the `timer` integration instead of fragile `delay` commands, ensuring devices turn off even if Home Assistant restarts.
+*   **Atomic Logic**: Every device gets its own file. Delete the file to remove the timer. No messy `automations.yaml`.
+*   **Zero Collisions**: Unique namespacing prevents logic from cross-firing between different devices.
 
 ## ⚠️ Mandatory Prerequisite
 Read the **[Technical Documentation & Setup Guide](DOCUMENTATION.md)** first. It explains how to set up the 3 required folders and update your `configuration.yaml` with the necessary include directives.

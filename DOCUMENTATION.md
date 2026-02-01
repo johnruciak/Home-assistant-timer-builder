@@ -28,19 +28,35 @@ script: !include_dir_list scripts/
 scene: !include_dir_list scenes/
 ```
 
-## 3. How the Generated Code Works
+## 3. The Architecture of Reliability: Why Modular?
+
+Most Home Assistant users start by putting everything in one big `automations.yaml` file. While simple, this becomes a "spaghetti" mess that is hard to debug. EntityTimer Pro uses a **Modular Package** approach for three critical reasons:
+
+### A. The "Watchdog" Safety Mechanism
+Standard scripts often use a `delay` command. **Delays are dangerous.** If Home Assistant restarts or a script is reloaded while a delay is running, the script dies and the device (like a water valve) stays ON forever.
+*   **Our Solution**: We use the dedicated `timer` integration. Timers are tracked by the Home Assistant state engine. The generated automation acts as a "Watchdog"—it listens for the timer to finish and fires a dedicated OFF command, ensuring your garden doesn't flood even if the UI is closed.
+
+### B. Atomic Deletion & Portability
+Because every device gets its own package file (e.g., `garden_valve_timer.yaml`), the logic is self-contained. 
+*   **Better**: If you replace your smart plug, you just delete the one file. You don't have to hunt through 5,000 lines of code to find the 4 related automations.
+*   **Safer**: Editing a single small file prevents accidental typos that could break your entire Home Assistant configuration.
+
+### C. Collision Avoidance
+Each generated file uses a unique "Slug" (based on your entity ID). This ensures that a timer for your "Living Room AC" never accidentally triggers the automation for your "Kitchen Light," even if they use similar logic.
+
+## 4. How the Generated Code Works
 The app generates a "Modular Package." Unlike standard automations, these are self-contained:
 *   **Input Number**: Creates a slider on your dashboard to adjust the time.
 *   **Timer**: A backend entity that handles the actual countdown.
 *   **Script**: The logic that turns the device ON and starts the countdown simultaneously.
 *   **Automation**: The safety "watchdog" that triggers when the timer hits zero to turn the device OFF.
 
-## 4. AI Engine Details
+## 5. AI Engine Details
 *   **Model**: Google Gemini 3 Pro.
 *   **Vision**: Used in the "Drop Screen" to map UI elements to technical `entity_id` strings.
 *   **Logic**: Used to ensure YAML syntax is 100% compliant with Home Assistant's strict formatting.
 
-## 5. License
+## 6. License
 
 **MIT License**
 
