@@ -700,7 +700,11 @@ scene: !include_dir_list scenes/`;
                 <div className="space-y-12 animate-in fade-in slide-in-from-left-4">
                   <div className="bg-indigo-600 rounded-[4rem] p-12 text-white shadow-3xl relative overflow-hidden flex flex-col lg:flex-row gap-12 items-center">
                     <div className="flex-grow space-y-8">
-                      <div className="space-y-4"><h4 className="text-4xl font-black italic uppercase">Automatic Sync</h4><p className="text-indigo-100 text-xl font-medium italic">Paste the JSON from the Entity Exporter Card in Home Assistant.</p></div>
+                      <div className="space-y-4"><h4 className="text-4xl font-black italic uppercase">Automatic Sync</h4>
+                        <p className="text-indigo-100 text-xl font-medium italic">
+                          Paste the JSON from the <a href={EXPORTER_CARD_REPO} target="_blank" rel="noopener noreferrer" className="underline decoration-indigo-300 hover:text-white inline-flex items-center gap-1 transition-colors">Entity Exporter Card <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg></a> in Home Assistant.
+                        </p>
+                      </div>
                       <div className="flex flex-wrap gap-4">
                         <button onClick={handleCopyRepoUrl} className="px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs italic bg-indigo-400 text-white hover:bg-indigo-300 transition-all shadow-2xl">GET EXPORTER URL</button>
                         <button onClick={handleCopyCardYaml} className="px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-xs italic bg-white text-indigo-600 hover:bg-indigo-50 transition-all shadow-2xl">COPY CARD YAML</button>
