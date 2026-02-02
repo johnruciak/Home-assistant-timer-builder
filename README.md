@@ -34,14 +34,28 @@ automation: !include_dir_list automations/
 script: !include_dir_list scripts/
 ```
 
-*Once this is done, you never need to restart again. Just click "Reload YAML" in Developer Tools when adding new timers.*
+---
+
+## 🏠 Self-Hosting
+Want to run this locally or on your own server?
+1. **Clone & Install**: `git clone` the repo and run `npm install`.
+2. **Set Environment**: Ensure you have a Google Gemini API Key.
+3. **Build**: Run `npm run build` to generate the static site.
+4. **Deploy**: Host the resulting `dist/` folder on any web server (NGINX, Caddy, etc.).
 
 ---
 
-## 🔒 Private & Free
-*   **No Login**: We don't want your Home Assistant credentials. All work happens in your browser.
-*   **Bring Your Own Key**: Use a free Google Gemini API key to power the dashboard-scanning AI. 
-*   **Encrypted**: Your data is yours. Screenshots are processed securely and never stored.
+## 🗺️ Roadmap: The Future of EntityTimer
+We are looking for contributors! Help us move toward these goals:
+*   **HACS Integration**: Transform this into a native Home Assistant dashboard card.
+*   **Blueprint Generator**: Option to output Home Assistant Blueprints instead of Packages for easier sharing.
+*   **Websocket Sync**: Direct connection to your HA instance (via Long Lived Access Token) for real-time entity selection.
+*   **Multi-Timer Management**: A dashboard view to see all currently active timers in one place.
 
 ---
-**Build your first timer now.** [Open Documentation](DOCUMENTATION.md) for detailed safety logic info.
+
+## 🤝 Contributing & Forking
+This project is open-source. We encourage you to **fork this repository**, add your own logic, and submit Pull Requests. If you've improved the "Watchdog" logic or added support for new domains, we want to see it!
+
+---
+**Build your first timer now.** [Open Documentation](DOCUMENTATION.md) for detailed safety logic and self-hosting info.
