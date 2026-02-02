@@ -1,5 +1,5 @@
 {
-  "name": "HA Entity Timer Pro",
+  "name": "HA Entity Timer",
   "description": "Discover all switchable Home Assistant entities from UI screenshots and generate visual countdown timers.",
   "requestFramePermissions": []
 }

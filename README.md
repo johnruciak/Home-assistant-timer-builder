@@ -1,7 +1,8 @@
-# ⏱️ EntityTimer Pro
+
+# ⏱️ EntityTimer
 ### Add a timer to any Home Assistant device in seconds.
 
-**EntityTimer Pro** is a simple tool designed to solve a common problem: forgetting to turn things off. Whether it's a water valve, a space heater, or a pool pump, this tool builds the code needed to give any device a reliable "Auto-Off" timer.
+**EntityTimer** is a simple tool designed to solve a common problem: forgetting to turn things off. Whether it's a water valve, a space heater, or a pool pump, this tool builds the code needed to give any device a reliable "Auto-Off" timer.
 
 ---
 

@@ -58,7 +58,7 @@ const App: React.FC = () => {
 
   const EXPORTER_CARD_REPO = "https://github.com/scharc/ha-entity-exporter-card";
   const EXPORTER_CARD_YAML = `type: custom:entity-exporter-card
-name: Sync to EntityTimer Pro
+name: Sync to EntityTimer
 # This card helps you export IDs for the timer generator.`;
 
   const STEP0_YAML = `homeassistant:
@@ -434,7 +434,7 @@ scene: !include_dir_list scenes/`;
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
             <div>
-              <h1 className="font-black text-2xl text-white leading-none tracking-tighter italic">EntityTimer Pro</h1>
+              <h1 className="font-black text-2xl text-white leading-none tracking-tighter italic">EntityTimer</h1>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Simple Timer Builder</p>
             </div>
           </div>
@@ -742,6 +742,7 @@ scene: !include_dir_list scenes/`;
       <style>{`
         @keyframes pulse-subtle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.98; transform: scale(0.998); } }
         .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #4f46e5 transparent; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.5); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; background-color: #4f46e5; }

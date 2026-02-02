@@ -1,5 +1,5 @@
 {
-  "name": "ha-entity-timer-pro",
+  "name": "ha-entity-timer",
   "private": true,
   "version": "0.0.0",
   "type": "module",

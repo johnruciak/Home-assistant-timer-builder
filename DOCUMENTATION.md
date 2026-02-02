@@ -1,7 +1,8 @@
-# Technical Documentation: EntityTimer Pro
+
+# Technical Documentation: EntityTimer
 
 ## 1. Overview
-EntityTimer Pro is a client-side tool that generates modular YAML packages for Home Assistant. It automates the creation of countdown timers, safety shut-offs, and dashboard controls for controllable devices.
+EntityTimer is a client-side tool that generates modular YAML packages for Home Assistant. It automates the creation of countdown timers, safety shut-offs, and dashboard controls for controllable devices.
 
 ## 2. Mandatory Setup (READ CAREFULLY)
 Home Assistant does not support modular files by default. You must enable "Packages" and "Dir Lists" before you can use the code from this app.
@@ -27,7 +28,7 @@ script: !include_dir_list scripts/
 ```
 
 ## 3. The Architecture of Reliability
-EntityTimer Pro uses a **Modular Package** approach:
+EntityTimer uses a **Modular Package** approach:
 *   **Watchdog Security**: Uses the `timer` integration instead of `delay` commands, ensuring safety even after a system restart.
 *   **Atomic Logic**: One device = one file. This prevents "spaghetti code" and makes maintenance simple.
 *   **Zero Collisions**: Uses unique slug-based namespacing for all entities.
@@ -40,7 +41,7 @@ EntityTimer Pro uses a **Modular Package** approach:
 *   **Google Gemini API Key**: Required for the "Drop Screen" vision discovery.
 
 ### Development Workflow
-1.  **Clone**: `git clone https://github.com/[your-username]/EntityTimer-Pro.git`
+1.  **Clone**: `git clone https://github.com/[your-username]/EntityTimer.git`
 2.  **Install**: `npm install`
 3.  **Local Dev**: `npm run dev`
 4.  **Production Build**: `npm run build`
@@ -57,7 +58,7 @@ The application expects `process.env.API_KEY` to be available. In a self-hosted 
 
 **MIT License**
 
-Copyright (c) 2025 EntityTimer Pro Contributors
+Copyright (c) 2025 EntityTimer Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
