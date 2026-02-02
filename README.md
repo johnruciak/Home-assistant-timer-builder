@@ -37,12 +37,20 @@ Use this if you already know the technical ID of your device (e.g., `switch.gard
 
 *   **Setup**: Paste your Entity ID into the **Quick Entry** box on the home screen and hit **Configure**.
 
-### 2. Entity Sync (Recommended)
-Sync your device list so you can pick from a menu instead of typing IDs.
+### 2. Entity Sync (Connect your Library)
+Sync your device list so you can pick from a menu instead of typing IDs. There are two ways to do this:
 
-*   **Step A: Install Exporter**: Use [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via [HACS](https://hacs.xyz/). 
-*   **Step B: Generate JSON**: Add the card to your dashboard, select your domains (Valves, Lights, etc.), and copy the generated JSON.
-*   **Step C: Import**: Paste that JSON into the **Entity Sync Center** in this app to populate your local library.
+#### **Method A: HACS Sync (Recommended)**
+Best for long-term use. Uses a structured JSON export.
+*   **Step 1**: Install [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via [HACS](https://hacs.xyz/). 
+*   **Step 2**: Add the card to any dashboard, select your domains (Valves, Lights, etc.), and copy the generated JSON.
+*   **Step 3**: Paste that JSON into the **Entity Sync Center** in this app.
+
+#### **Method B: Developer Tools (No Plugins Required)**
+Fastest way to start without installing anything new.
+*   **Step 1**: Go to your Home Assistant **Developer Tools > States**.
+*   **Step 2**: Highlight and copy the entire table of entities (or just a chunk of it).
+*   **Step 3**: Open the **Entity Sync Center** here, switch to the **Manual States Extraction** tab, and paste the text. Our parser will extract the valid controllable IDs automatically.
 
 ### 3. Drop Screen (Experimental)
 *   **How it works**: Take a screenshot of your Home Assistant dashboard and drop it onto the app.
