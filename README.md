@@ -23,9 +23,10 @@ automation: !include_dir_list automations/
 script: !include_dir_list scripts/
 ```
 
-**After saving the file, you MUST Restart Home Assistant.**
+**⚠️ Initial Activation:**
+After saving `configuration.yaml` for the first time, you **must Restart Home Assistant** to activate the new folder links. 
 
-*For more details on the technical benefits of this modular approach, see the **[Technical Documentation](DOCUMENTATION.md)**.*
+*Once this setup is finished, you do NOT need to restart again. You can simply use **Developer Tools > YAML > Reload All YAML Configuration** to activate any new timers you download.*
 
 ---
 
