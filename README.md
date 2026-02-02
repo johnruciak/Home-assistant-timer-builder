@@ -7,7 +7,7 @@ This app generates modular YAML files. Before you can use the generated code, yo
 ## 🛠️ Mandatory Setup (One-Time)
 
 ### 1. Create Required Folders
-Using the **File Editor** or **VS Code** add-on in Home Assistant, navigate to your `/config/` directory (the root folder where `configuration.yaml` is located) and create these three folders:
+Using the [File Editor](https://www.home-assistant.io/addons/configurator/) or [VS Code (Studio Code Server)](https://github.com/hassio-addons/addon-vscode) add-on in Home Assistant, navigate to your `/config/` directory (the root folder where `configuration.yaml` is located) and create these three folders:
 *   `packages/`
 *   `automations/`
 *   `scripts/`
@@ -39,7 +39,7 @@ Use this if you already know the technical ID of your device (e.g., `switch.gard
 ### 2. Entity Sync (Recommended)
 Sync your device list so you can pick from a menu instead of typing IDs.
 
-*   **Step A: Install Exporter**: Use [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via **HACS**. 
+*   **Step A: Install Exporter**: Use [Entity Exporter Card](https://github.com/scharc/ha-entity-exporter-card) via [HACS](https://hacs.xyz/). 
 *   **Step B: Generate JSON**: Add the card to your dashboard, select your domains (Valves, Lights, etc.), and copy the generated JSON.
 *   **Step C: Import**: Paste that JSON into the **Entity Sync Center** in this app to populate your local library.
 
