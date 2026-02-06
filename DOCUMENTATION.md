@@ -27,6 +27,12 @@ automation: !include_dir_list automations/
 script: !include_dir_list scripts/
 ```
 
+### Step D: Reload YAML Configuration
+After editing `configuration.yaml` or adding new files to the folders above:
+1. Go to **Developer Tools** in your Home Assistant sidebar.
+2. Navigate to the **YAML** tab.
+3. Click **Reload All YAML Configuration** (or restart Home Assistant if it's your first time setting up packages).
+
 ## 3. The Architecture of Reliability
 EntityTimer uses a **Modular Package** approach:
 *   **Watchdog Security**: Uses the `timer` integration instead of `delay` commands, ensuring safety even after a system restart.
@@ -41,7 +47,7 @@ EntityTimer uses a **Modular Package** approach:
 *   **Google Gemini API Key**: Required for the "Drop Screen" vision discovery.
 
 ### Development Workflow
-1.  **Clone**: `git clone https://github.com/[your-username]/EntityTimer.git`
+1.  **Clone**: `git clone https://github.com/johnruciak/Home-assistant-timer-builder/`
 2.  **Install**: `npm install`
 3.  **Local Dev**: `npm run dev`
 4.  **Production Build**: `npm run build`

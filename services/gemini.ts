@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { DiscoveryResult } from "../types";
 
@@ -71,6 +72,7 @@ export const generateYaml = async (config: {
   duration: number,
   safety: boolean,
   helper: boolean,
+  fade?: boolean,
   targetTemp?: number,
   hvacMode?: string
 }): Promise<{
@@ -96,6 +98,7 @@ INPUT PARAMETERS:
 - Domain: "${domain}"
 - Slug: "${slug}"
 - Duration: ${config.duration} min
+- Fade Out (10s): ${config.fade ? 'YES (For Lights Only)' : 'NO'}
 - Perception: ${isValveLikely ? 'Treat as Water Valve' : 'Default'}
 ${domain === 'climate' ? `- Target Temp: ${config.targetTemp}°C\n- HVAC Mode: ${config.hvacMode}` : ''}
 
@@ -104,18 +107,20 @@ RELIABILITY RULES:
 2. Domain Logic:
    - If domain is 'climate', use 'climate.set_temperature' with hvac_mode: ${config.hvacMode || 'cool'} and temperature: ${config.targetTemp || 21}. Use 'climate.turn_off' to stop.
    - For all others, use standard '${domain}.turn_on' and '${domain}.turn_off'.
+   - IMPORTANT: If domain is 'light' AND Fade Out is YES, the turn_off action MUST use 'transition: 10' in the data block.
 3. Modular Sync: 
    - Timer ID: timer.${slug}_countdown
    - Script ID: script.${slug}_run_timer
    - Input Number ID: input_number.${slug}_timer_duration
+   - CRITICAL: The input_number MUST have 'mode: slider' so it appears as a slider in the dashboard.
 4. Syntax: Strict 2-space YAML.
 5. Iconography: If 'Treat as Water Valve', use 'mdi:water-pump' or 'mdi:valve'.
 
 EXPECTED JSON:
 {
-  "helpers": "input_number:\\n  ${slug}_timer_duration:\\n    name: ...\\n    ...\\ntimer:\\n  ${slug}_countdown:\\n    ...",
-  "scripts": "${slug}_run_timer:\\n  alias: Start ${config.deviceName} Timer\\n  sequence:\\n    - service: ${domain === 'climate' ? 'climate.set_temperature' : domain + '.turn_on'}\\n      target:\\n        entity_id: ${config.entityId}\\n      ${domain === 'climate' ? 'data:\\n        temperature: ' + (config.targetTemp || 21) + '\\n        hvac_mode: ' + (config.hvacMode || 'cool') : ''}\\n    - service: timer.start\\n      target:\\n        entity_id: timer.${slug}_countdown\\n      data:\\n        duration: \"{{ states('input_number.${slug}_timer_duration') | int * 60 }}\"",
-  "automations": "alias: ${config.deviceName} Timer Finished\\ntrigger:\\n  - platform: event\\n    event_type: timer.finished\\n    event_data:\\n      entity_id: timer.${slug}_countdown\\naction:\\n  - service: ${domain}.turn_off\\n    target:\\n      entity_id: ${config.entityId}",
+  "helpers": "input_number:\\n  ${slug}_timer_duration:\\n    name: ${config.deviceName} Duration\\n    min: 1\\n    max: 240\\n    step: 1\\n    initial: ${config.duration}\\n    unit_of_measurement: min\\n    mode: slider\\ntimer:\\n  ${slug}_countdown:\\n    name: ${config.deviceName} Countdown\\n    duration: \"00:01:00\"",
+  "scripts": "${slug}_run_timer:\\n  alias: Start ${config.deviceName} Timer\\n  sequence:\\n    - service: ${domain === 'climate' ? 'climate.set_temperature' : domain + '.turn_on'}\\n      target:\\n        entity_id: ${config.entityId}\\n      ${domain === 'climate' ? 'data:\\n        temperature: ' + (config.targetTemp || 21) + '\\n        hvac_mode: ' + (config.hvacMode || 'cool') : ''}\\n    - service: timer.start\\n      target:\\n        entity_id: timer.${slug}_countdown\\n      data:\\n        duration: \"{{ (states('input_number.${slug}_timer_duration') | int * 60) | string }}\"",
+  "automations": "alias: ${config.deviceName} Timer Finished\\ntrigger:\\n  - platform: event\\n    event_type: timer.finished\\n    event_data:\\n      entity_id: timer.${slug}_countdown\\naction:\\n  - service: ${domain}.turn_off\\n    target:\\n      entity_id: ${config.entityId}\\n    ${domain === 'light' && config.fade ? 'data:\\n      transition: 10' : ''}",
   "dashboard": "type: entities\\ntitle: ${config.deviceName} Timer\\nentities:\\n  - entity: ${config.entityId}\\n  - entity: input_number.${slug}_timer_duration\\n  - entity: timer.${slug}_countdown\\n  - entity: script.${slug}_run_timer\\n    name: Run Timer"
 }`;
 

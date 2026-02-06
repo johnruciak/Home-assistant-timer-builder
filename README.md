@@ -25,7 +25,7 @@ In your `/config/` directory, create these three folders:
 *   `scripts/`
 
 ### 2. Update configuration.yaml
-Add these lines to the top of your `configuration.yaml` and **Restart Home Assistant**:
+Add these lines to the top of your `configuration.yaml`:
 
 ```yaml
 homeassistant:
@@ -35,11 +35,14 @@ automation: !include_dir_list automations/
 script: !include_dir_list scripts/
 ```
 
+### 3. Reload YAML Configuration
+Go to **Developer Tools > YAML** and click **Reload All YAML Configuration** or **Restart Home Assistant**.
+
 ---
 
 ## 🏠 Self-Hosting
 Want to run this locally or on your own server?
-1. **Clone & Install**: `git clone` the repo and run `npm install`.
+1. **Clone & Install**: `git clone https://github.com/johnruciak/Home-assistant-timer-builder/` and run `npm install`.
 2. **Set Environment**: Ensure you have a Google Gemini API Key.
 3. **Build**: Run `npm run build` to generate the static site.
 4. **Deploy**: Host the resulting `dist/` folder on any web server (NGINX, Caddy, etc.).

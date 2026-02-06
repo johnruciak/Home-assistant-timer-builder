@@ -16,6 +16,8 @@ const App: React.FC = () => {
   const [yaml, setYaml] = useState<{ scripts: string; automations: string; helpers: string; dashboard: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [showPrerequisites, setShowPrerequisites] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
   const [showListManager, setShowListManager] = useState(false);
   const [listManagerTab, setListManagerTab] = useState<'card' | 'manual'>('card');
   const [isDragging, setIsDragging] = useState(false);
@@ -25,6 +27,7 @@ const App: React.FC = () => {
   
   const [duration, setDuration] = useState(30);
   const [includeSafety, setIncludeSafety] = useState(true);
+  const [includeFade, setIncludeFade] = useState(true);
   
   const [targetTemp, setTargetTemp] = useState(21);
   const [hvacMode, setHvacMode] = useState<'cool' | 'heat' | 'auto'>('cool');
@@ -117,6 +120,13 @@ scene: !include_dir_list scenes/`;
     if (matches) {
       const unique = Array.from(new Set(matches.map(m => m.toLowerCase()))).sort();
       setRawEntityList(unique.join('\n'));
+    }
+  };
+
+  const handleClearLibrary = () => {
+    if (window.confirm("Are you sure you want to clear your entire entity library? This cannot be undone.")) {
+      setRawEntityList('');
+      localStorage.removeItem('ha_entity_list');
     }
   };
 
@@ -300,6 +310,7 @@ scene: !include_dir_list scenes/`;
         entityId: customEntityId,
         duration: duration,
         safety: includeSafety,
+        fade: customEntityId.startsWith('light.') ? includeFade : false,
         helper: true,
         targetTemp: selectedEntity?.type === 'climate' ? targetTemp : undefined,
         hvacMode: selectedEntity?.type === 'climate' ? hvacMode : undefined
@@ -438,12 +449,22 @@ scene: !include_dir_list scenes/`;
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Simple Timer Builder</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setShowListManager(true)} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all hover:bg-slate-700 shadow-lg relative">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          <div className="flex items-center gap-3">
+            <a 
+              href="https://github.com/johnruciak/Home-assistant-timer-builder/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic border border-white/5 flex items-center gap-2"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              Source Code
+            </a>
+            <button onClick={() => setShowPrerequisites(true)} className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic border border-white/5">Prerequisites</button>
+            <button onClick={() => setShowFeatures(true)} className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all italic border border-white/5">Features</button>
+            <button onClick={() => setShowListManager(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-slate-700 shadow-lg relative italic border border-white/5">
               My Entities {masterEntities.length > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] border-2 border-[#020617]">{masterEntities.length}</span>}
             </button>
-            <button onClick={() => setShowGuide(true)} className="px-5 py-2.5 bg-white text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:scale-105 active:scale-95">Setup Help</button>
+            <button onClick={() => setShowGuide(true)} className="px-4 py-2 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg hover:scale-105 active:scale-95 italic">Setup Help</button>
           </div>
         </div>
       </nav>
@@ -631,9 +652,27 @@ scene: !include_dir_list scenes/`;
                     )}
 
                     <div className="p-16 bg-black/40 rounded-[4rem] shadow-inner text-center border border-white/5 space-y-10">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block italic">Timer Length (Minutes)</label>
-                      <input type="range" min="1" max="240" value={duration} onChange={(e) => setDuration(parseInt(e.target.value))} className="w-full h-3 bg-slate-800 rounded-full appearance-none cursor-pointer accent-indigo-600" />
-                      <div className="flex items-baseline justify-center gap-6"><span className="text-[12rem] font-black text-indigo-500 italic tracking-tighter">{duration}</span><span className="text-4xl font-black text-slate-700 uppercase italic">min</span></div>
+                      <div className="flex flex-col items-center gap-8">
+                        <div className="w-full space-y-4">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block italic">Timer Length (Minutes)</label>
+                          <input type="range" min="1" max="240" value={duration} onChange={(e) => setDuration(parseInt(e.target.value))} className="w-full h-3 bg-slate-800 rounded-full appearance-none cursor-pointer accent-indigo-600" />
+                          <div className="flex items-baseline justify-center gap-6"><span className="text-[8rem] font-black text-indigo-500 italic tracking-tighter">{duration}</span><span className="text-2xl font-black text-slate-700 uppercase italic">min</span></div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center justify-center gap-6 w-full pt-4">
+                          <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                            <input type="checkbox" checked={includeSafety} onChange={(e) => setIncludeSafety(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                            <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">Safety Override</span>
+                          </label>
+
+                          {customEntityId.startsWith('light.') && (
+                            <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                              <input type="checkbox" checked={includeFade} onChange={(e) => setIncludeFade(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">10s Fade Out</span>
+                            </label>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <button onClick={handleGenerate} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-12 rounded-[4rem] shadow-2xl transition-all transform hover:scale-[1.02] active:scale-95 text-4xl uppercase tracking-[0.2em] italic">GET TIMER CODE</button>
                   </div>
@@ -689,7 +728,17 @@ scene: !include_dir_list scenes/`;
             <div className="bg-slate-800 p-20 text-white flex items-center justify-between relative overflow-hidden">
                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
               <div className="relative z-10"><h3 className="text-6xl font-black italic tracking-tighter uppercase">Entity Sync</h3><p className="text-slate-400 mt-6 text-2xl font-medium max-w-2xl italic">Import your device list to quickly pick entities without typing.</p></div>
-              <button onClick={() => setShowListManager(false)} className="relative z-10 bg-white/10 p-6 rounded-full hover:bg-white/20 transition-all hover:rotate-90 active:scale-90 shadow-2xl"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12" /></svg></button>
+              <div className="flex items-center gap-6 relative z-10">
+                <button 
+                  onClick={handleClearLibrary} 
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-6 py-4 rounded-3xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex items-center gap-3 border border-red-500/20"
+                  title="Wipe Library"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Clear Library
+                </button>
+                <button onClick={() => setShowListManager(false)} className="bg-white/10 p-6 rounded-full hover:bg-white/20 transition-all hover:rotate-90 active:scale-90 shadow-2xl"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12" /></svg></button>
+              </div>
             </div>
             <div className="bg-slate-900 px-20 py-8 flex gap-8 border-b border-white/5">
               <button onClick={() => setListManagerTab('card')} className={`px-8 py-4 rounded-3xl font-black uppercase tracking-widest text-sm italic transition-all ${listManagerTab === 'card' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-slate-500 hover:bg-white/5'}`}>Auto-Sync JSON</button>
@@ -713,7 +762,7 @@ scene: !include_dir_list scenes/`;
                     <div className="bg-black/20 p-8 rounded-[3rem] font-mono text-xs text-indigo-200 border border-white/10 w-full lg:w-96 shrink-0 flex flex-col"><p className="text-[10px] text-indigo-400 mb-4 font-black uppercase tracking-widest italic opacity-50">Blueprint Preview:</p><pre className="flex-grow whitespace-pre-wrap">{EXPORTER_CARD_YAML}</pre></div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingJson(true); }} onDragLeave={() => setIsDraggingJson(false)} onDrop={handleJsonDrop} className={`bg-slate-800/50 p-12 rounded-[4rem] border-2 space-y-8 flex flex-col justify-center items-center text-center group transition-all duration-300 ${isDraggingJson ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' : 'border-slate-800 hover:border-indigo-500/30'}`}><div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-white mb-2 shadow-xl transition-all ${isDraggingJson ? 'bg-indigo-500 scale-110 rotate-12' : 'bg-indigo-600 group-hover:scale-110'}`}><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></div><h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Drop JSON</h4><label className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest cursor-pointer shadow-xl active:scale-95">SELECT FILE<input type="file" className="hidden" accept=".json" onChange={handleJsonFileUpload} /></label></div>
+                    <div onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingJson(true); }} onDragLeave={() => setIsDraggingJson(false)} onDrop={handleJsonDrop} className={`bg-slate-800/50 p-12 rounded-[4rem] border-2 space-y-8 flex flex-col justify-center items-center text-center group transition-all duration-300 ${isDraggingJson ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' : 'border-slate-800 hover:border-indigo-500/30'}`}><div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-white mb-2 shadow-xl transition-all ${isDraggingJson ? 'bg-indigo-500 scale-110 rotate-12' : 'bg-indigo-600 group-hover:scale-110'}`}><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></div><h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Drop JSON</h4><label className="px-8 py-4 bg-indigo-600 hover:bg-indigo-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest cursor-pointer shadow-xl active:scale-95">SELECT FILE<input type="file" className="hidden" accept=".json" onChange={handleJsonFileUpload} /></label></div>
                     <div className="bg-slate-800/50 p-12 rounded-[4rem] border-2 border-slate-800 space-y-8"><h4 className="text-2xl font-black text-white italic uppercase">Paste JSON</h4><textarea onChange={(e) => handleMagicExtract(e.target.value)} placeholder="Paste the JSON export content here..." className="w-full h-32 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 font-mono text-indigo-400 focus:border-indigo-500 outline-none transition-all text-sm" /></div>
                   </div>
                 </div>
@@ -737,7 +786,183 @@ scene: !include_dir_list scenes/`;
               <div className="bg-amber-600/10 border-2 border-amber-600/30 p-10 rounded-[3rem] space-y-6 shadow-xl"><h4 className="text-3xl font-black text-amber-500 italic uppercase tracking-tighter">⚠️ Create the Folders First</h4><p className="text-slate-300 text-lg font-medium italic leading-relaxed">Use the File Editor to create folders named <code>packages/</code>, <code>automations/</code>, and <code>scripts/</code> in your <code>/config/</code> folder.</p></div>
               <div className="space-y-8"><h4 className="text-4xl font-black text-white italic uppercase tracking-tighter">Installation 101</h4><p className="text-slate-400 text-2xl font-medium leading-relaxed italic">Add these lines to your Home Assistant configuration to support the timer files.</p></div>
               <div className="bg-black/60 p-12 rounded-[3rem] border-2 border-white/5 shadow-3xl"><p className="text-indigo-400 font-black mb-6 uppercase tracking-[0.3em] text-xs italic">Paste this into configuration.yaml:</p><div className="space-y-3 font-mono text-indigo-300 text-lg"><code className="block">homeassistant: &#123; packages: !include_dir_named packages/ &#125;</code><code className="block">automation: !include_dir_list automations/</code><code className="block">script: !include_dir_list scripts/</code></div></div>
+              <div className="bg-indigo-600/10 border-2 border-indigo-600/30 p-10 rounded-[3rem] space-y-6 shadow-xl">
+                <h4 className="text-3xl font-black text-indigo-500 italic uppercase tracking-tighter">🔄 Apply Changes</h4>
+                <p className="text-slate-300 text-lg font-medium italic leading-relaxed">After adding files to the folders, go to <b>Developer Tools > YAML</b> and click <b>Reload All YAML Configuration</b> or <b>Restart Home Assistant</b>.</p>
+              </div>
               <button onClick={() => setShowGuide(false)} className="w-full bg-white text-slate-900 font-black py-10 rounded-[3rem] hover:bg-slate-200 transition-all uppercase tracking-[0.2em] italic shadow-2xl text-2xl">GOT IT</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPrerequisites && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-500">
+          <div className="bg-[#0f172a] w-full max-w-4xl rounded-[5rem] shadow-2xl overflow-hidden border border-slate-800">
+            <div className="bg-amber-600 p-20 text-white flex items-center justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+              <h3 className="text-6xl font-black italic tracking-tighter uppercase relative z-10">Prerequisites</h3>
+              <button onClick={() => setShowPrerequisites(false)} className="relative z-10 bg-white/10 p-5 rounded-full hover:bg-white/20 transition-all active:scale-90"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="p-20 space-y-16 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              
+              {/* Requirement 1 */}
+              <div className="space-y-8">
+                <div className="flex gap-8 items-center">
+                   <div className="w-16 h-16 bg-amber-500 rounded-3xl flex items-center justify-center shrink-0 shadow-2xl shadow-amber-500/20 text-slate-900 font-black italic text-2xl">01</div>
+                   <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter">Enable Modular Config</h4>
+                </div>
+                <div className="bg-slate-800/40 p-10 rounded-[3rem] border border-white/5 space-y-6">
+                  <p className="text-slate-300 text-lg font-medium italic">
+                    The timer system depends on <b>Packages</b> and folder includes to keep your config clean. Add this to the top of your <code>configuration.yaml</code>:
+                  </p>
+                  <div className="bg-black/60 p-8 rounded-3xl font-mono text-indigo-300 text-sm border border-white/5 relative group">
+                    <pre className="whitespace-pre-wrap">homeassistant:{"\n"}  packages: !include_dir_named packages/{"\n\n"}automation: !include_dir_list automations/{"\n"}script: !include_dir_list scripts/</pre>
+                    <button onClick={() => navigator.clipboard.writeText("homeassistant:\n  packages: !include_dir_named packages/\n\nautomation: !include_dir_list automations/\nscript: !include_dir_list scripts/")} className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Copy</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirement 2 */}
+              <div className="space-y-8">
+                <div className="flex gap-8 items-center">
+                   <div className="w-16 h-16 bg-amber-500 rounded-3xl flex items-center justify-center shrink-0 shadow-2xl shadow-amber-500/20 text-slate-900 font-black italic text-2xl">02</div>
+                   <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter">Prepare Config Folders</h4>
+                </div>
+                <div className="bg-slate-800/40 p-10 rounded-[3rem] border border-white/5 space-y-8">
+                  <p className="text-slate-300 text-lg font-medium italic">
+                    Use the <b>File Editor</b> or <b>VS Code</b> add-on in Home Assistant to create these folders inside your <code>/config/</code> directory:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['packages', 'automations', 'scripts'].map(folder => (
+                      <div key={folder} className="bg-black/40 p-6 rounded-2xl border border-white/5 text-center">
+                        <svg className="w-8 h-8 text-indigo-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                        <code className="text-white font-mono font-bold">{folder}/</code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirement 3 */}
+              <div className="space-y-8">
+                <div className="flex gap-8 items-center">
+                   <div className="w-16 h-16 bg-amber-500 rounded-3xl flex items-center justify-center shrink-0 shadow-2xl shadow-amber-500/20 text-slate-900 font-black italic text-2xl">03</div>
+                   <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter">Reload YAML</h4>
+                </div>
+                <div className="bg-slate-800/40 p-10 rounded-[3rem] border border-white/5 space-y-6">
+                  <p className="text-slate-300 text-lg font-medium italic">
+                    Whenever you add or modify code files, you must tell Home Assistant to look for them.
+                  </p>
+                  <div className="bg-black/40 p-8 rounded-3xl border border-white/5 space-y-4">
+                    <p className="text-white text-sm font-bold uppercase tracking-widest italic text-indigo-400">Action Plan:</p>
+                    <ol className="text-slate-300 space-y-2 text-sm italic list-decimal list-inside">
+                      <li>Open <b>Developer Tools</b></li>
+                      <li>Go to the <b>YAML</b> tab</li>
+                      <li>Click <b>Reload All YAML Configuration</b> (or restart)</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirement 4 */}
+              <div className="space-y-8">
+                <div className="flex gap-8 items-center">
+                   <div className="w-16 h-16 bg-amber-500 rounded-3xl flex items-center justify-center shrink-0 shadow-2xl shadow-amber-500/20 text-slate-900 font-black italic text-2xl">04</div>
+                   <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter">Google Gemini Key</h4>
+                </div>
+                <div className="bg-slate-800/40 p-10 rounded-[3rem] border border-white/5 space-y-6">
+                  <p className="text-slate-300 text-lg font-medium italic">
+                    To use the "Dashboard Scan" AI feature, you need a Google Gemini API Key. Vision models require a <b>Billing-Enabled</b> (Paid) Google Cloud project.
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    <a href="https://aistudio.google.com/" target="_blank" className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl">Get API Key</a>
+                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl">Check Billing Info</a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-red-500/10 border-2 border-red-500/30 p-10 rounded-[3rem] space-y-4">
+                 <div className="flex items-center gap-4 text-red-400">
+                   <svg className="w-8 h-8 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                   <h5 className="text-2xl font-black uppercase italic tracking-tighter">Warning: Restart Required</h5>
+                 </div>
+                 <p className="text-red-200/70 font-medium italic">
+                   After editing <code>configuration.yaml</code> for the first time, you <b>must restart Home Assistant</b> before the new folders will be recognized.
+                 </p>
+              </div>
+
+              <button onClick={() => setShowPrerequisites(false)} className="w-full bg-white text-slate-900 font-black py-10 rounded-[3rem] hover:bg-slate-200 transition-all uppercase tracking-[0.2em] italic shadow-2xl text-2xl">GOT IT, LET'S GO</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFeatures && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-500">
+          <div className="bg-[#0f172a] w-full max-w-5xl rounded-[5rem] shadow-2xl overflow-hidden border border-slate-800">
+            <div className="bg-indigo-600 p-20 text-white flex items-center justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+              <h3 className="text-6xl font-black italic tracking-tighter uppercase relative z-10">Features</h3>
+              <button onClick={() => setShowFeatures(false)} className="relative z-10 bg-white/10 p-5 rounded-full hover:bg-white/20 transition-all active:scale-90"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="p-20 space-y-12 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Visual Discovery */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">AI Visual Scan</h6>
+                  <p className="text-slate-400 font-medium italic">Drop any dashboard screenshot. Gemini Pro Vision detects and names switchable targets instantly.</p>
+                </div>
+
+                {/* Climate Specific */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Climate Automation</h6>
+                  <p className="text-slate-400 font-medium italic">Automatically sets target temperature and HVAC mode (Cool/Heat/Auto) when the timer starts for AC units.</p>
+                </div>
+
+                {/* Light Specific */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.364-6.364l-.707-.707M6.736 14h10.528A5.002 5.002 0 0112 19a5.002 5.002 0 01-4.736-5z" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Smooth Fade Out</h6>
+                  <p className="text-slate-400 font-medium italic">Lights can be configured with a 10-second transition. No more instant pitch-black rooms when the timer ends.</p>
+                </div>
+
+                {/* Switches & Valves */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Switches & Valves</h6>
+                  <p className="text-slate-400 font-medium italic">Perfect for pool pumps, heaters, or water valves. Reliable auto-off logic for simple binary devices.</p>
+                </div>
+
+                {/* Watchdog Security */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Watchdog Security</h6>
+                  <p className="text-slate-400 font-medium italic">Uses native <code>timer</code> entities. Unlike <code>delay</code> commands, these survive system restarts and YAML reloads.</p>
+                </div>
+
+                {/* Smart Sync */}
+                <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                  </div>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Smart Sync</h6>
+                  <p className="text-slate-400 font-medium italic">Import your entire entity registry via the Sync Card. Build a sorted, searchable device library.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowFeatures(false)} className="w-full bg-white text-slate-900 font-black py-10 rounded-[3rem] hover:bg-slate-200 transition-all uppercase tracking-[0.2em] italic shadow-2xl text-2xl">LET'S BUILD</button>
             </div>
           </div>
         </div>
@@ -747,6 +972,8 @@ scene: !include_dir_list scenes/`;
         @keyframes pulse-subtle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.98; transform: scale(0.998); } }
         .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #4f46e5 transparent; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.5); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; background-color: #4f46e5; }
