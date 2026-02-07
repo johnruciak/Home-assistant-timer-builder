@@ -29,6 +29,11 @@ const App: React.FC = () => {
   const [includeSafety, setIncludeSafety] = useState(true);
   const [includeFade, setIncludeFade] = useState(true);
   
+  const [presenceSensor, setPresenceSensor] = useState('');
+  const [preWarning, setPreWarning] = useState(false);
+  const [usePresets, setUsePresets] = useState(true);
+  const [sunsetOnly, setSunsetOnly] = useState(false);
+
   const [targetTemp, setTargetTemp] = useState(21);
   const [hvacMode, setHvacMode] = useState<'cool' | 'heat' | 'auto'>('cool');
 
@@ -313,7 +318,11 @@ scene: !include_dir_list scenes/`;
         fade: customEntityId.startsWith('light.') ? includeFade : false,
         helper: true,
         targetTemp: selectedEntity?.type === 'climate' ? targetTemp : undefined,
-        hvacMode: selectedEntity?.type === 'climate' ? hvacMode : undefined
+        hvacMode: selectedEntity?.type === 'climate' ? hvacMode : undefined,
+        presenceSensor: presenceSensor,
+        preWarning: preWarning,
+        presets: usePresets,
+        sunsetOnly: sunsetOnly
       });
       setYaml(result);
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -333,6 +342,10 @@ scene: !include_dir_list scenes/`;
     setQuickSearch('');
     setManualInput('');
     setShowManualInputForm(false);
+    setPresenceSensor('');
+    setPreWarning(false);
+    setUsePresets(true);
+    setSunsetOnly(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -363,7 +376,7 @@ scene: !include_dir_list scenes/`;
   };
 
   const handleCopyRepoUrl = () => {
-    navigator.clipboard.writeText(EXPORTER_CARD_REPO);
+    navigator.clipboard.writeText("https://github.com/johnruciak/Home-assistant-timer-builder/");
   };
 
   const handleCopyCardYaml = () => {
@@ -659,18 +672,52 @@ scene: !include_dir_list scenes/`;
                           <div className="flex items-baseline justify-center gap-6"><span className="text-[8rem] font-black text-indigo-500 italic tracking-tighter">{duration}</span><span className="text-2xl font-black text-slate-700 uppercase italic">min</span></div>
                         </div>
                         
-                        <div className="flex flex-wrap items-center justify-center gap-6 w-full pt-4">
-                          <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
-                            <input type="checkbox" checked={includeSafety} onChange={(e) => setIncludeSafety(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">Safety Override</span>
-                          </label>
-
-                          {customEntityId.startsWith('light.') && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full pt-4">
+                          <div className="space-y-6">
                             <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
-                              <input type="checkbox" checked={includeFade} onChange={(e) => setIncludeFade(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
-                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">10s Fade Out</span>
+                              <input type="checkbox" checked={includeSafety} onChange={(e) => setIncludeSafety(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">Safety Override</span>
                             </label>
-                          )}
+
+                            {customEntityId.startsWith('light.') && (
+                              <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                                <input type="checkbox" checked={includeFade} onChange={(e) => setIncludeFade(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">10s Fade Out</span>
+                              </label>
+                            )}
+
+                            <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                              <input type="checkbox" checked={preWarning} onChange={(e) => setPreWarning(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">2m End Warning</span>
+                            </label>
+
+                            <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                              <input type="checkbox" checked={usePresets} onChange={(e) => setUsePresets(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">Quick Presets</span>
+                            </label>
+
+                            <label className="flex items-center gap-4 cursor-pointer group bg-slate-800/40 px-6 py-4 rounded-3xl border border-white/5 hover:border-indigo-500/50 transition-all">
+                              <input type="checkbox" checked={sunsetOnly} onChange={(e) => setSunsetOnly(e.target.checked)} className="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-700 checked:bg-indigo-600 accent-indigo-600 transition-all cursor-pointer" />
+                              <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors italic">Sunset Only</span>
+                            </label>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-indigo-500/5 border-2 border-indigo-500/20 p-8 rounded-[2.5rem] space-y-4">
+                              <div className="flex items-center gap-3 mb-2">
+                                <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 italic">Presence Aware</span>
+                              </div>
+                              <input 
+                                type="text" 
+                                placeholder="Presence entity (e.g. binary_sensor.room_motion)" 
+                                value={presenceSensor} 
+                                onChange={(e) => setPresenceSensor(e.target.value)} 
+                                className="w-full bg-slate-800/80 border-2 border-slate-700 rounded-2xl px-4 py-3 text-xs font-mono text-white outline-none focus:border-indigo-500 transition-colors"
+                              />
+                              <p className="text-[9px] text-slate-500 italic">Timer will postpone shut-off if this sensor is active.</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -798,7 +845,7 @@ scene: !include_dir_list scenes/`;
 
       {showPrerequisites && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-500">
-          <div className="bg-[#0f172a] w-full max-w-4xl rounded-[5rem] shadow-2xl overflow-hidden border border-slate-800">
+          <div className="bg-[#0f172a] w-full max-w-5xl rounded-[5rem] shadow-2xl overflow-hidden border border-slate-800">
             <div className="bg-amber-600 p-20 text-white flex items-center justify-between relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
               <h3 className="text-6xl font-black italic tracking-tighter uppercase relative z-10">Prerequisites</h3>
@@ -944,22 +991,22 @@ scene: !include_dir_list scenes/`;
                   <p className="text-slate-400 font-medium italic">Perfect for pool pumps, heaters, or water valves. Reliable auto-off logic for simple binary devices.</p>
                 </div>
 
-                {/* Watchdog Security */}
+                {/* Presence Aware */}
                 <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
                   <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   </div>
-                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Watchdog Security</h6>
-                  <p className="text-slate-400 font-medium italic">Uses native <code>timer</code> entities. Unlike <code>delay</code> commands, these survive system restarts and YAML reloads.</p>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Presence Aware</h6>
+                  <p className="text-slate-400 font-medium italic">Postpones auto-off if room motion is detected, preventing you from being left in the dark.</p>
                 </div>
 
-                {/* Smart Sync */}
+                {/* Mobile Alerts */}
                 <div className="p-10 bg-slate-800/50 rounded-[3.5rem] border border-white/5 space-y-4">
                   <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                   </div>
-                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Smart Sync</h6>
-                  <p className="text-slate-400 font-medium italic">Import your entire entity registry via the Sync Card. Build a sorted, searchable device library.</p>
+                  <h6 className="text-2xl font-black text-white italic uppercase tracking-tighter">Pre-End Warnings</h6>
+                  <p className="text-slate-400 font-medium italic">Receive a mobile notification 2 minutes before the device turns off so you can extend the time if needed.</p>
                 </div>
               </div>
               <button onClick={() => setShowFeatures(false)} className="w-full bg-white text-slate-900 font-black py-10 rounded-[3rem] hover:bg-slate-200 transition-all uppercase tracking-[0.2em] italic shadow-2xl text-2xl">LET'S BUILD</button>
@@ -972,8 +1019,6 @@ scene: !include_dir_list scenes/`;
         @keyframes pulse-subtle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.98; transform: scale(0.998); } }
         .animate-pulse-subtle { animation: pulse-subtle 3s ease-in-out infinite; }
         .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #4f46e5 transparent; }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(79, 70, 229, 0.5); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; background-color: #4f46e5; }

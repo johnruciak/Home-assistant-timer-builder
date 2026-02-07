@@ -10,7 +10,6 @@ const cleanJsonResponse = (text: string) => {
 };
 
 export const analyzeImage = async (base64Image: string): Promise<DiscoveryResult> => {
-  // Initialize right before use to pick up injected process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
@@ -74,21 +73,22 @@ export const generateYaml = async (config: {
   helper: boolean,
   fade?: boolean,
   targetTemp?: number,
-  hvacMode?: string
+  hvacMode?: string,
+  presenceSensor?: string,
+  preWarning?: boolean,
+  presets?: boolean,
+  sunsetOnly?: boolean
 }): Promise<{
   scripts: string,
   automations: string,
   helpers: string,
   dashboard: string
 }> => {
-  // Initialize right before use to pick up injected process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const technicalIdOnly = config.entityId.includes('.') ? config.entityId.split('.')[1] : config.entityId;
   const slug = technicalIdOnly.toLowerCase().replace(/[^a-z0-9]/g, '_');
   const domain = config.entityId.split('.')[0] || 'switch';
-
-  const isValveLikely = config.deviceName.toLowerCase().includes('valve') || config.entityId.toLowerCase().includes('valve') || config.entityId.toLowerCase().includes('swv');
 
   const prompt = `Generate Home Assistant YAML components for a modular timer system.
 
@@ -97,31 +97,30 @@ INPUT PARAMETERS:
 - Entity: "${config.entityId}"
 - Domain: "${domain}"
 - Slug: "${slug}"
-- Duration: ${config.duration} min
-- Fade Out (10s): ${config.fade ? 'YES (For Lights Only)' : 'NO'}
-- Perception: ${isValveLikely ? 'Treat as Water Valve' : 'Default'}
-${domain === 'climate' ? `- Target Temp: ${config.targetTemp}°C\n- HVAC Mode: ${config.hvacMode}` : ''}
+- Base Duration: ${config.duration} min
+- Presence Blocker Sensor: ${config.presenceSensor || 'NONE'}
+- Notify 2m before end: ${config.preWarning ? 'YES' : 'NO'}
+- Include Dashboard Presets: ${config.presets ? 'YES' : 'NO'}
+- Sunset Only Constraint: ${config.sunsetOnly ? 'YES' : 'NO'}
 
 RELIABILITY RULES:
 1. Target ID: "${config.entityId}".
 2. Domain Logic:
-   - If domain is 'climate', use 'climate.set_temperature' with hvac_mode: ${config.hvacMode || 'cool'} and temperature: ${config.targetTemp || 21}. Use 'climate.turn_off' to stop.
-   - For all others, use standard '${domain}.turn_on' and '${domain}.turn_off'.
-   - IMPORTANT: If domain is 'light' AND Fade Out is YES, the turn_off action MUST use 'transition: 10' in the data block.
-3. Modular Sync: 
-   - Timer ID: timer.${slug}_countdown
-   - Script ID: script.${slug}_run_timer
-   - Input Number ID: input_number.${slug}_timer_duration
-   - CRITICAL: The input_number MUST have 'mode: slider' so it appears as a slider in the dashboard.
-4. Syntax: Strict 2-space YAML.
-5. Iconography: If 'Treat as Water Valve', use 'mdi:water-pump' or 'mdi:valve'.
+   - If 'climate', use service 'climate.set_temperature' with hvac_mode: ${config.hvacMode || 'cool'} and temp: ${config.targetTemp || 21}. Turn off via 'climate.turn_off'.
+   - If 'light' and fade is active, use transition: 10 in turn_off.
+3. Advanced Logic Integration:
+   - If Presence Blocker: Add condition to the "Timer Finished" automation checking that the presence sensor is 'off'. If 'on', do not turn off the device (optionally restart timer).
+   - If Sunset Only: Add condition to the "Start Timer" script so it only executes if the sun is below the horizon.
+   - If Pre-Warning: Generate an automation triggered by timer starting that waits (duration - 2) mins and sends a 'notify.mobile_app_user' message.
+   - If Presets: The dashboard YAML should include a horizontal-stack with buttons for 15m, 30m, 1h, 2h intervals that call script.${slug}_run_timer with a 'duration' variable.
+4. Script Flexibility: Update script.${slug}_run_timer to accept an optional 'minutes' variable, defaulting to input_number.${slug}_timer_duration if not passed.
 
 EXPECTED JSON:
 {
-  "helpers": "input_number:\\n  ${slug}_timer_duration:\\n    name: ${config.deviceName} Duration\\n    min: 1\\n    max: 240\\n    step: 1\\n    initial: ${config.duration}\\n    unit_of_measurement: min\\n    mode: slider\\ntimer:\\n  ${slug}_countdown:\\n    name: ${config.deviceName} Countdown\\n    duration: \"00:01:00\"",
-  "scripts": "${slug}_run_timer:\\n  alias: Start ${config.deviceName} Timer\\n  sequence:\\n    - service: ${domain === 'climate' ? 'climate.set_temperature' : domain + '.turn_on'}\\n      target:\\n        entity_id: ${config.entityId}\\n      ${domain === 'climate' ? 'data:\\n        temperature: ' + (config.targetTemp || 21) + '\\n        hvac_mode: ' + (config.hvacMode || 'cool') : ''}\\n    - service: timer.start\\n      target:\\n        entity_id: timer.${slug}_countdown\\n      data:\\n        duration: \"{{ (states('input_number.${slug}_timer_duration') | int * 60) | string }}\"",
-  "automations": "alias: ${config.deviceName} Timer Finished\\ntrigger:\\n  - platform: event\\n    event_type: timer.finished\\n    event_data:\\n      entity_id: timer.${slug}_countdown\\naction:\\n  - service: ${domain}.turn_off\\n    target:\\n      entity_id: ${config.entityId}\\n    ${domain === 'light' && config.fade ? 'data:\\n      transition: 10' : ''}",
-  "dashboard": "type: entities\\ntitle: ${config.deviceName} Timer\\nentities:\\n  - entity: ${config.entityId}\\n  - entity: input_number.${slug}_timer_duration\\n  - entity: timer.${slug}_countdown\\n  - entity: script.${slug}_run_timer\\n    name: Run Timer"
+  "helpers": "YAML for input_number and timer entities...",
+  "scripts": "YAML for the timer control script...",
+  "automations": "YAML for the shutdown logic and warnings...",
+  "dashboard": "YAML for a rich Lovelace card..."
 }`;
 
   const response = await ai.models.generateContent({
