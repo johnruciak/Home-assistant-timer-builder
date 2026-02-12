@@ -1,5 +1,17 @@
 
 import { AppState, AppAction } from '../types';
+import { DEFAULT_TIMER_DURATION } from '../constants/app';
+
+const getSafeLocalStorage = (key: string): string => {
+  try {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key) || '';
+    }
+  } catch (e) {
+    console.warn('LocalStorage not available');
+  }
+  return '';
+};
 
 export const initialState: AppState = {
   isKeyConfigured: null,
@@ -15,11 +27,11 @@ export const initialState: AppState = {
   showGuide: false,
   showListManager: false,
   listManagerTab: 'manual',
-  duration: 30,
+  duration: DEFAULT_TIMER_DURATION,
   scheduleMode: 'none',
   scheduleTime: '20:00',
   recurrence: 'daily',
-  rawEntityList: localStorage.getItem('ha_entity_list') || '',
+  rawEntityList: getSafeLocalStorage('ha_entity_list'),
   quickSearch: '',
 };
 
@@ -34,7 +46,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state, 
         selectedEntity: action.payload,
         customName: action.payload.name,
-        customEntityId: action.payload.entityId
+        customEntityId: action.payload.entityId,
+        yaml: null, // Clear previous generation results
+        error: null
       };
     case 'SET_CUSTOM_NAME': return { ...state, customName: action.payload };
     case 'SET_CUSTOM_ENTITY_ID': return { ...state, customEntityId: action.payload };
@@ -49,7 +63,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_SCHEDULE_TIME': return { ...state, scheduleTime: action.payload };
     case 'SET_RECURRENCE': return { ...state, recurrence: action.payload };
     case 'SET_RAW_ENTITY_LIST': 
-      localStorage.setItem('ha_entity_list', action.payload);
+      try {
+        localStorage.setItem('ha_entity_list', action.payload);
+      } catch (e) {}
       return { ...state, rawEntityList: action.payload };
     case 'SET_QUICK_SEARCH': return { ...state, quickSearch: action.payload };
     case 'RESET_APP': 

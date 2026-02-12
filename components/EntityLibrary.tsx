@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { AppState, AppAction } from '../types';
+import { ENTITY_REGEX_G, ENTITY_REGEX_VALIDATE } from '../constants/app';
 
 interface EntityLibraryProps {
   isOpen: boolean;
@@ -11,11 +12,6 @@ interface EntityLibraryProps {
 
 export const EntityLibrary: React.FC<EntityLibraryProps> = ({ isOpen, onClose, state, dispatch }) => {
   const [isDragging, setIsDragging] = useState(false);
-
-  const TIMER_TARGET_DOMAINS = ['switch', 'light', 'valve', 'fan', 'climate', 'media_player', 'cover', 'vacuum'];
-  const LIBRARY_DOMAINS = [...TIMER_TARGET_DOMAINS, 'binary_sensor', 'sensor', 'input_boolean'];
-  const ENTITY_REGEX_G = new RegExp(`\\b(${LIBRARY_DOMAINS.join('|')})\\.[a-z0-9_]+\\b`, 'gi');
-  const ENTITY_REGEX_VALIDATE = new RegExp(`^(${LIBRARY_DOMAINS.join('|')})\\.[a-z0-9_]+$`, 'i');
 
   const getGroup = (id: string) => {
     const domain = id.split('.')[0]?.toLowerCase();

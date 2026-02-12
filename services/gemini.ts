@@ -90,24 +90,31 @@ export const generateYaml = async (config: {
   const slug = technicalIdOnly.toLowerCase().replace(/[^a-z0-9]/g, '_');
   const domain = config.entityId.split('.')[0] || 'switch';
 
+  const isClimate = domain === 'climate';
+
   const prompt = `Generate a Home Assistant PACKAGE YAML for an Auto-Off Timer with Advanced Scheduling.
 
 INPUT:
 - Device: "${config.deviceName}" (${config.entityId})
 - Unique Slug: "${slug}"
+- Domain: "${domain}"
 - Duration Default: ${config.duration} minutes
 - Schedule Mode: "${config.scheduleMode}"
 - Schedule Time: "${config.scheduleTime || 'N/A'}"
 - Recurrence: "${config.recurrence || 'daily'}"
+${isClimate ? `- Climate Specifics: Mode=${config.hvacMode || 'heat_cool'}, Temp=${config.targetTemp || 21}` : ''}
 
 CRITICAL REQUIREMENTS:
-1. MANDATORY: The automation block MUST have a unique "id". Example: "id: timer_${slug}_automation". This is required for Home Assistant to show traces and avoid errors.
-2. Return a single YAML block (package style) containing: timer, input_number, script, and automation.
-3. The automation must handle:
-   - Trigger 1: timer.finished (Action: Turn device OFF).
-   - Trigger 2: Schedule mode (Action: Turn device ON and start timer).
-4. Logic for sunset/sunrise/time triggers based on the input.
-5. In the dashboard UI YAML, include the input_number and a button to start the timer manually.
+1. MANDATORY: The automation block MUST have a unique "id". Example: "id: timer_${slug}_automation".
+2. Return a single YAML block (package style) containing: timer, input_number, input_select (for schedule mode), input_datetime (for schedule time), script, and automation.
+3. For CLIMATE entities:
+   - When the timer starts, use service 'climate.set_hvac_mode' and 'climate.set_temperature'.
+   - When the timer finished, use service 'climate.set_hvac_mode' to 'off'.
+4. DASHBOARD UI YAML (Lovelace):
+   - Use an 'entities' card.
+   - For the 'input_number' duration, MANDATORY use 'type: attribute' or ensure it renders as a slider if possible in HA UI, or use 'type: custom:slider-entity-row' if standard is not enough, but preferably stick to standard 'entities' card with 'input_number' which defaults to slider if configured correctly in HA.
+   - FIX VISUAL EDITOR WARNING: Avoid 'action_name' in the entities list if it causes issues. Instead, use a standard call-service button syntax for the script.
+   - Provide a clean, structured UI.
 
 EXPECTED JSON:
 {

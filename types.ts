@@ -1,4 +1,18 @@
 
+declare global {
+  // Define AIStudio interface to resolve conflicts with existing global declarations
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+
+  interface Window {
+    // Re-added readonly modifier to ensure compatibility with existing global declarations.
+    // All declarations of 'aistudio' on the Window interface must have identical modifiers.
+    readonly aistudio: AIStudio;
+  }
+}
+
 export interface DiscoveredEntity {
   entityId: string;
   name: string;
