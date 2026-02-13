@@ -7,9 +7,9 @@ declare global {
   }
 
   interface Window {
-    // Added readonly modifier to ensure compatibility with existing global declarations.
+    // Removed readonly modifier to ensure compatibility with existing global declarations.
     // All declarations of 'aistudio' on the Window interface must have identical modifiers.
-    readonly aistudio: AIStudio;
+    aistudio: AIStudio;
   }
 }
 

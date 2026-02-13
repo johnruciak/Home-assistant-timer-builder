@@ -5,7 +5,9 @@ import { DiscoveryResult } from "../types";
 const VISION_MODEL = 'gemini-3-pro-preview';
 const TEXT_MODEL = 'gemini-3-pro-preview';
 
-const cleanJsonResponse = (text: string) => {
+// Handle undefined text correctly
+const cleanJsonResponse = (text: string | undefined) => {
+  if (!text) return "";
   return text.replace(/```json\n?|```/g, "").trim();
 };
 
@@ -62,6 +64,7 @@ export const analyzeImage = async (base64Image: string): Promise<DiscoveryResult
   });
 
   const text = cleanJsonResponse(response.text);
+  if (!text) throw new Error("Empty response from AI");
   return JSON.parse(text);
 };
 
@@ -156,5 +159,6 @@ EXPECTED JSON:
   });
 
   const text = cleanJsonResponse(response.text);
+  if (!text) throw new Error("Empty response from AI");
   return JSON.parse(text);
 };
