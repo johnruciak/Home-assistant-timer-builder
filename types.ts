@@ -7,7 +7,7 @@ declare global {
   }
 
   interface Window {
-    // Re-added readonly modifier to ensure compatibility with existing global declarations.
+    // Added readonly modifier to ensure compatibility with existing global declarations.
     // All declarations of 'aistudio' on the Window interface must have identical modifiers.
     readonly aistudio: AIStudio;
   }
@@ -48,6 +48,9 @@ export interface AppState {
   recurrence: Recurrence;
   rawEntityList: string;
   quickSearch: string;
+  // Climate specifics
+  hvacMode: string;
+  targetTemp: number;
 }
 
 export type AppAction =
@@ -70,4 +73,6 @@ export type AppAction =
   | { type: 'SET_RECURRENCE'; payload: Recurrence }
   | { type: 'SET_RAW_ENTITY_LIST'; payload: string }
   | { type: 'SET_QUICK_SEARCH'; payload: string }
+  | { type: 'SET_HVAC_MODE'; payload: string }
+  | { type: 'SET_TARGET_TEMP'; payload: number }
   | { type: 'RESET_APP' };

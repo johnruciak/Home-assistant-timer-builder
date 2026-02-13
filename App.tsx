@@ -19,20 +19,30 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkKey = async () => {
-      const hasKey = await window.aistudio.hasSelectedApiKey();
-      dispatch({ type: 'SET_KEY_CONFIGURED', payload: hasKey });
+      try {
+        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+          const hasKey = await window.aistudio.hasSelectedApiKey();
+          dispatch({ type: 'SET_KEY_CONFIGURED', payload: hasKey });
+        } else {
+          // If aistudio is not yet available, we default to false to show activation
+          dispatch({ type: 'SET_KEY_CONFIGURED', payload: false });
+        }
+      } catch (err) {
+        console.error("Failed to check API key status:", err);
+        dispatch({ type: 'SET_KEY_CONFIGURED', payload: false });
+      }
     };
     checkKey();
   }, []);
 
   const handleActivate = async () => {
-    // Assume key selection is successful immediately after opening selection dialog
-    await window.aistudio.openSelectKey();
-    dispatch({ type: 'SET_KEY_CONFIGURED', payload: true });
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+      await window.aistudio.openSelectKey();
+      dispatch({ type: 'SET_KEY_CONFIGURED', payload: true });
+    }
   };
 
   const handleError = useCallback((err: any) => {
-    // Reset key configuration state if API key validation fails
     if (err?.message?.includes('Requested entity was not found')) {
       dispatch({ type: 'SET_KEY_CONFIGURED', payload: false });
       dispatch({ type: 'SET_ERROR', payload: "API Key verification failed. Please select a valid key from a paid project." });
@@ -84,7 +94,9 @@ const App: React.FC = () => {
         helper: true,
         scheduleMode: state.scheduleMode,
         scheduleTime: state.scheduleTime,
-        recurrence: state.scheduleMode !== 'none' ? state.recurrence : undefined
+        recurrence: state.scheduleMode !== 'none' ? state.recurrence : undefined,
+        hvacMode: state.hvacMode,
+        targetTemp: state.targetTemp
       });
       dispatch({ type: 'SET_YAML', payload: result });
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -94,6 +106,15 @@ const App: React.FC = () => {
       dispatch({ type: 'SET_GENERATING', payload: false });
     }
   };
+
+  // Initial loading state while we check API key configuration
+  if (state.isKeyConfigured === null) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-8">
+        <LoadingSpinner label="Initializing System..." />
+      </div>
+    );
+  }
 
   // Mandatory activation screen for users without a selected API key
   if (state.isKeyConfigured === false) {
@@ -109,7 +130,6 @@ const App: React.FC = () => {
             <p className="text-slate-400 text-lg">
               To use Gemini 3 Pro reasoning features, you must select an API key from a paid Google Cloud project.
             </p>
-            {/* Added mandatory billing link per developer guidelines */}
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 
@@ -120,7 +140,7 @@ const App: React.FC = () => {
             </a>
           </div>
 
-          <button onClick={handleActivate} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-8 rounded-3xl text-xl uppercase italic">ACTIVATE SYSTEM</button>
+          <button onClick={handleActivate} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-8 rounded-3xl text-xl uppercase italic shadow-2xl transition-all active:scale-95">ACTIVATE SYSTEM</button>
         </div>
       </div>
     );

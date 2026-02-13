@@ -102,24 +102,41 @@ INPUT:
 - Schedule Mode: "${config.scheduleMode}"
 - Schedule Time: "${config.scheduleTime || 'N/A'}"
 - Recurrence: "${config.recurrence || 'daily'}"
-${isClimate ? `- Climate Specifics: Mode=${config.hvacMode || 'heat_cool'}, Temp=${config.targetTemp || 21}` : ''}
+${isClimate ? `- Climate Specifics: Target Mode=${config.hvacMode || 'heat_cool'}, Target Temp=${config.targetTemp || 21}` : ''}
 
-CRITICAL REQUIREMENTS:
-1. MANDATORY: The automation block MUST have a unique "id". Example: "id: timer_${slug}_automation".
-2. Return a single YAML block (package style) containing: timer, input_number, input_select (for schedule mode), input_datetime (for schedule time), script, and automation.
-3. For CLIMATE entities:
-   - When the timer starts, use service 'climate.set_hvac_mode' and 'climate.set_temperature'.
-   - When the timer finished, use service 'climate.set_hvac_mode' to 'off'.
-4. DASHBOARD UI YAML (Lovelace):
-   - Use an 'entities' card.
-   - For the 'input_number' duration, MANDATORY use 'type: attribute' or ensure it renders as a slider if possible in HA UI, or use 'type: custom:slider-entity-row' if standard is not enough, but preferably stick to standard 'entities' card with 'input_number' which defaults to slider if configured correctly in HA.
-   - FIX VISUAL EDITOR WARNING: Avoid 'action_name' in the entities list if it causes issues. Instead, use a standard call-service button syntax for the script.
-   - Provide a clean, structured UI.
+CRITICAL PACKAGE REQUIREMENTS (FIXING INTEGRATION NOT FOUND ERROR):
+1. VALID PACKAGE STRUCTURE: The YAML MUST NOT have a custom root key like "${slug}_timer:".
+2. INSTEAD, use standard top-level integration keys:
+   timer:
+     ${slug}_timer:
+       ...
+   input_number:
+     ${slug}_duration:
+       mode: slider
+       ...
+   automation:
+     - id: ${slug}_automation
+       ...
+   script:
+     ${slug}_start:
+       ...
+
+LOGIC REQUIREMENTS:
+- AUTOMATION ID: MUST have a unique "id" for visual editor compatibility.
+- CLIMATE LOGIC: 
+  - 'start' script: Call climate.set_hvac_mode AND climate.set_temperature.
+  - 'stop' or 'timer finished': Call climate.set_hvac_mode with hvac_mode: 'off'.
+- DURATION SLIDER: In the 'input_number' definition, MUST set 'mode: slider'.
+
+DASHBOARD UI (LOVELACE):
+- Use 'type: entities' card.
+- AVOID 'type: call-service'. Use standard script entity rows (e.g., "- entity: script.${slug}_start") to avoid visual editor warnings.
+- Home Assistant automatically displays a "RUN" button for scripts in entities cards.
 
 EXPECTED JSON:
 {
-  "package": "The full YAML package block starting with timer: ...",
-  "dashboard": "The Lovelace UI YAML..."
+  "package": "Valid YAML Package string...",
+  "dashboard": "Valid Lovelace YAML string..."
 }`;
 
   const response = await ai.models.generateContent({

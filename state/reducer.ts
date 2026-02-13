@@ -33,6 +33,8 @@ export const initialState: AppState = {
   recurrence: 'daily',
   rawEntityList: getSafeLocalStorage('ha_entity_list'),
   quickSearch: '',
+  hvacMode: 'heat_cool',
+  targetTemp: 21,
 };
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -47,7 +49,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         selectedEntity: action.payload,
         customName: action.payload.name,
         customEntityId: action.payload.entityId,
-        yaml: null, // Clear previous generation results
+        yaml: null,
         error: null
       };
     case 'SET_CUSTOM_NAME': return { ...state, customName: action.payload };
@@ -62,6 +64,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_SCHEDULE_MODE': return { ...state, scheduleMode: action.payload };
     case 'SET_SCHEDULE_TIME': return { ...state, scheduleTime: action.payload };
     case 'SET_RECURRENCE': return { ...state, recurrence: action.payload };
+    case 'SET_HVAC_MODE': return { ...state, hvacMode: action.payload };
+    case 'SET_TARGET_TEMP': return { ...state, targetTemp: action.payload };
     case 'SET_RAW_ENTITY_LIST': 
       try {
         localStorage.setItem('ha_entity_list', action.payload);
